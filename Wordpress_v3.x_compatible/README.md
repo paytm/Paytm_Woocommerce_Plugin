@@ -17,10 +17,10 @@ This plugin is used to integrate Paytm payment gateway with Woocommerce for Word
  5. Now you can see *paytm* in your payment option.
 
 # Paytm PG URL Details
-	staging	
-		Transaction URL             => https://securegw-stage.paytm.in/theia/processTransaction
-		Transaction Status Url      => https://securegw-stage.paytm.in/merchant-status/getTxnStatus
+	* Staging	
+		* Transaction URL             => https://securegw-stage.paytm.in/theia/processTransaction
+		* Transaction Status Url      => https://securegw-stage.paytm.in/merchant-status/getTxnStatus
 
-	Production
-		Transaction URL             => https://securegw.paytm.in/theia/processTransaction
-		Transaction Status Url      => https://securegw.paytm.in/merchant-status/getTxnStatus
+	* Production
+		* Transaction URL             => https://securegw.paytm.in/theia/processTransaction
+		* Transaction Status Url      => https://securegw.paytm.in/merchant-status/getTxnStatus
