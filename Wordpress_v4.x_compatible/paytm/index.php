@@ -1,7 +1,7 @@
 <?php include('encdec_paytm.php');?>
 <?php
 /*
-Plugin Name: WooCommerce paytm gateway
+Plugin Name: WooCommerce Paytm Payment Gateway
 Plugin URI: http://paytm.com/
 Description: Paytm Payment Gateway with Check Status.
 Version: 0.2
@@ -28,6 +28,8 @@ function woocommerce_paytm_init() {
 	function paytmShowMessage($content){
 		return '<div class="box '.htmlentities($_GET['type']).'-box">'.htmlentities(urldecode($_GET['msg'])).'</div>'.$content;
 	}
+
+
 	/**
 	 * Gateway class
 	 */
@@ -54,6 +56,11 @@ function woocommerce_paytm_init() {
 			$this->website = $this->settings['website'];
 			$this->redirect_page_id = $this->settings['redirect_page_id'];
 			$this->callback_url = $this->settings['callback_url'];
+
+			$this->promo_code_status = $this->settings['promo_code_status'];
+			$this->promo_code_validation = $this->settings['promo_code_validation'];
+			$this->promo_codes = $this->settings['promo_codes'];
+
 			// $this->log = $this->settings['log'];
 			$this->msg['message'] = "";
 			$this->msg['class'] = "";	
@@ -79,7 +86,7 @@ function woocommerce_paytm_init() {
 
 			$this->form_fields = array(
 				'enabled'			=> array(
-					'title' 		=> __('Enable/Disable'),
+					'title' 			=> __('Enable/Disable'),
 					'type' 			=> 'checkbox',
 					'label'			=> __('Enable Paytm Payments.'),
 					'default'		=> 'no'
@@ -143,12 +150,34 @@ function woocommerce_paytm_init() {
 					'title'			=> __('Callback URL'),
 					'type'			=> 'text',
 					'default'		=> $this->getDefaultCallbackUrl(),
-				),				
+				),			
 				'redirect_page_id' => array(
 					'title'			=> __('Return Page'),
 					'type'			=> 'select',
 					'options'		=> $this->get_pages('Select Page'),
 					'description'	=> "Page that customer will see after successful transaction"
+				),
+				'promo_code_status' => array(
+					'title'			=> __('Promo Code Status'),
+					'type'			=> 'select',
+					'options'		=> array("0" => "Disabled", "1" => "Enabled"),
+					'default'		=> '0',
+					'description'	=> __('Enabling this will show Promo Code field at Checkout.'),
+				),
+				'promo_code_validation' => array(
+					'title'			=> __('Local Validation'),
+					'type'			=> 'select',
+					'options'		=> array("0" => "Disabled", "1" => "Enabled"),
+					'default'		=> '0',
+					'description'	=> __('Transaction will be failed in case of Promo Code failure at Paytm\'s end.'),
+					'desc_tip'		=> _('Validate applied Promo Code before proceeding to Paytm payment page.')
+				),
+				'promo_codes' => array(
+					'title'			=> __('Promo Codes'),
+					'label'			=> __('Enable'),
+					'type'			=> 'text',
+					'description'	=> __('Use comma ( , ) to separate multiple codes i.e. FB50,CASHBACK10 etc.'),
+					'desc_tip'		=> __('These promo codes must be configured with your Paytm MID.')
 				),
 				/*
 				'log' => array(
@@ -170,21 +199,23 @@ function woocommerce_paytm_init() {
 			echo '<h3>'.__('Paytm Payment Gateway').'</h3>';
 			echo '<p>'.__('Online payment solutions for all your transactions by Paytm').'</p>';
 
-
-			
 			echo '<table class="form-table">';
 			$this->generate_settings_html();
 			echo '</table>';
 
+			$last_updated = "";
 			$path = plugin_dir_path( __FILE__ ) . "/paytm_version.txt";
 			if(file_exists($path)){
 				$handle = fopen($path, "r");
 				if($handle !== false){
 					$date = fread($handle, 10); // i.e. DD-MM-YYYY or 25-04-2018
-					echo '<d>Last Updated: '. date("d F Y", strtotime($date)) .'</p>';
+					$last_updated = '<p>Last Updated: '. date("d F Y", strtotime($date)) .'</p>';
 				}
 			}
 
+			$footer_text = '<div style="text-align: center;"><hr/>'.$last_updated.'<p>WooCommerce Version: ' .WOOCOMMERCE_VERSION.'</p></div>';
+
+			echo $footer_text;
 
 			echo '<script>
 					var default_callback_url = "'. $this->getDefaultCallbackUrl() .'";
@@ -200,6 +231,10 @@ function woocommerce_paytm_init() {
 						toggleCallbackUrl();
 					});
 					toggleCallbackUrl();
+
+					// add border around promo code configurations to keep them separate
+					jQuery("select[name=\"woocommerce_paytm_promo_code_status\"]").parents("tr").css("border-top", "1px solid black");
+					
 				</script>';
 		}
 
@@ -214,8 +249,10 @@ function woocommerce_paytm_init() {
 		 * Receipt Page
 		 **/
 		function receipt_page($order){
+
 			echo '<p>'.__('Thank you for your order, please click the button below to pay with paytm.').'</p>';
 			echo $this->generate_paytm_form($order);
+
 		}
 
 		/**
@@ -236,13 +273,14 @@ function woocommerce_paytm_init() {
 		/**
 		 * Check for valid paytm server callback // response processing //
 		 **/
-		function check_paytm_response(){	
-			global $woocommerce;			
+		function check_paytm_response(){
+
+			global $woocommerce;
 			if(isset($_REQUEST['ORDERID']) && isset($_REQUEST['RESPCODE'])){
 				
 				$order_id = $_POST['ORDERID'];
 
-				// $order_id = "28"; // just for testing					
+				// $order_id = substr($order_id, strpos($order_id, "-") + 1); // just for testing
 
 				$responseDescription = $_REQUEST['RESPMSG'];
 
@@ -293,7 +331,7 @@ function woocommerce_paytm_init() {
 														"ORDERID"	=> $order_id
 													);
 							
-							// $requestParamList["ORDERID"] = $_POST["ORDERID"]; // jsut for testing
+							// $requestParamList["ORDERID"] = $_POST["ORDERID"]; // just for testing
 
 							$requestParamList['CHECKSUMHASH'] = getChecksumFromArray($requestParamList, $this->secret_key);
 							
@@ -349,7 +387,7 @@ function woocommerce_paytm_init() {
 						$order->add_order_note('Failed');
 						$order->add_order_note($this->msg['message']);
 						
-					}					
+					}
 				
 				} else {
 					$order->update_status('failed');
@@ -403,14 +441,14 @@ function woocommerce_paytm_init() {
 			
 			}
 
-			// $order_id = "RHL_".strtotime("now")."_".$order_id; // just for testing
+			// $order_id = "TEST_".strtotime("now")."_ORDERID-".$order_id; // just for testing
 
 
 			// decode html entity as & would have converted to &amp; before saving to database
 			$callback_url = html_entity_decode($this->callback_url);
 
 			$post_variables = array(
-					"MID"				=> $this->merchantIdentifier,
+					"MID"					=> $this->merchantIdentifier,
 					"ORDER_ID"			=> $order_id,
 					"CUST_ID"			=> $email,
 					"TXN_AMOUNT"		=> $order->order_total,
@@ -427,14 +465,122 @@ function woocommerce_paytm_init() {
 
 			// echo "<PRE>".http_build_query($post_variables);exit;
 
-			$paytm_args_array = array();
+			$paytm_form_fields = "";
 			foreach($post_variables as $k=>$v){
-				$paytm_args_array[] = "<input type='hidden' name='". $k ."' value='". $v ."'/>";
+				$paytm_form_fields .= '<input type="hidden" name="'. $k .'" value="'. $v .'"/>';
 			}
 
-			return '<form action="'.$this->gateway_url.'" method="post" id="paytm_payment_form">
-						' . implode('', $paytm_args_array) . '
-						<input type="submit" class="button-alt" id="submit_paytm_payment_form" value="'.__('Pay via paytm').'" />
+
+			if($this->promo_code_status) {
+				$this->show_promo_code = true;
+			} else {
+				$this->show_promo_code = false;
+			}
+
+			if($this->show_promo_code == true) {
+				return 
+				'<form action="'.$this->gateway_url.'" method="post" id="paytm_form_redirect">
+								' . $paytm_form_fields . '</form>
+				<div id="promo-code-section" style="margin-bottom:10px;">
+					<input type="text" id="promo_code" name="promo_code" placeholder="Promo Code" style="display:block; width:50%; float:left;">
+					<button id="btn_promo_code" class="btn btn-primary" style="display:block; float:left;" type="button">Apply</button>
+					<div style="clear:both;"></div>
+				</div>
+				<div class="buttons">
+					<div class="pull-right">
+				   	<input type="submit" class="button-alt" id="submit_paytm_form_redirect" value="'.__('Pay via paytm').'" />
+						<a class="button cancel" href="'.$order->get_cancel_order_url().'">
+							'.__('Cancel order &amp; restore cart').'
+						</a>
+					</div>
+				</div>
+				<style>
+				#promo-code-section.has-error input{
+					border:1px solid #f56b6b;
+				}
+
+				#promo-code-section input[disabled]{
+					cursor: not-allowed;
+					background-color: #eee;
+					opacity: 1;
+ 				}
+				</style>
+				<script type="text/javascript">
+				/*
+				* Promo Code functionality starts here
+				*/
+				var original_checksum = "'.$post_variables["CHECKSUMHASH"].'";
+
+				jQuery(document).ready(function($){
+					$("#btn_promo_code").click(function(){
+
+						$("#promo-code-section.has-error").removeClass("has-error");
+						$("#promo-code-section .text-danger, #promo-code-section .text-success").remove();
+
+						// if some promo code already applied and now user requests to remove it
+						if($(this).hasClass("removePromoCode")){
+
+							// remove promo code from form params
+							$("form#paytm_form_redirect input[name=PROMO_CAMP_ID]").remove();
+							$("form#paytm_form_redirect input[name=CHECKSUMHASH]").val(original_checksum);
+
+							// enable input to allow user to enter promo code
+							$("#promo_code").prop("disabled", false).val("");
+							$("#btn_promo_code").addClass("btn-primary").removeClass("btn-danger").removeClass("removePromoCode").text("Apply");
+
+						} else {
+
+							if($("#promo_code").val().trim() == "") {
+								$("#promo_code").parent().addClass("has-error");
+								return;
+							};
+
+							$.ajax({
+								url: "'.admin_url( 'admin-ajax.php?action=apply_coupon' ).'",
+								type: "post",
+								dataType: "json",
+								data: $("form#paytm_form_redirect").serialize() + "&promo_code="+$("#promo_code").val(),
+								success: function(res){
+									if(res.success == true){
+										// remove old input if there is already exists, to avoid duplicate inputs
+										$("form#paytm_form_redirect input[name=PROMO_CAMP_ID]").remove();
+
+										// add promo code input to form post
+										$("form#paytm_form_redirect").append("<input type=\"hidden\" name=\"PROMO_CAMP_ID\" value=\"\"/>");
+
+										// add promo code value
+										$("form#paytm_form_redirect input[name=PROMO_CAMP_ID").val($("#promo_code").val());
+
+										// bind new generated checksum
+										$("form#paytm_form_redirect input[name=CHECKSUMHASH]").val(res.CHECKSUMHASH);
+
+										$("#promo-code-section").append("<span class=\"text-success\">"+ res.message +"</span>");
+
+										$("#promo_code").prop("disabled", true);
+										$("#btn_promo_code").removeClass("btn-primary").addClass("btn-danger").addClass("removePromoCode").text("Remove");
+									} else {
+										$("#promo-code-section").addClass("has-error").append("<span class=\"text-danger\">"+ res.message +"</span>");
+									}
+								}
+							});
+						}
+					});
+
+					$("#submit_paytm_form_redirect").click(function(){
+						document.getElementById("paytm_form_redirect").submit();
+					});
+				});
+				/*
+				* Promo Code functionality starts here
+				*/
+				</script>
+				';
+				} else {
+
+					return 
+					'<form action="'.$this->gateway_url.'" method="post" id="paytm_form_redirect">
+						' . $paytm_form_fields . '
+						<input type="submit" class="button-alt" id="submit_paytm_form_redirect" value="'.__('Pay via paytm').'" />
 						<a class="button cancel" href="'.$order->get_cancel_order_url().'">
 							'.__('Cancel order &amp; restore cart').'
 						</a>
@@ -456,11 +602,12 @@ function woocommerce_paytm_init() {
 								}
 							});
 							
-							jQuery("#submit_paytm_payment_form").click();
+							document.getElementById("paytm_form_redirect").submit();
 
 							});
 						</script>
 					</form>';
+				}
 		}
 
 
@@ -489,8 +636,153 @@ function woocommerce_paytm_init() {
 			}
 			return $page_list;
 		}
-
 	}
+
+
+	/*
+	* Promo Code functions here
+	*/
+	add_action( "wp_ajax_nopriv_apply_coupon" , 'apply_coupon' );
+	add_action( "wp_ajax_apply_coupon" , 'apply_coupon' );
+
+	function apply_coupon() {
+		
+		$settings = get_option( "woocommerce_paytm_settings", null );
+		// echo "<PRE>";print_r($settings);	echo __LINE__;exit;
+
+		if(isset($_POST["promo_code"]) && trim($_POST["promo_code"]) != "") {
+
+			$json = array();
+
+			// if promo code local validation enabled
+			if($settings["promo_code_validation"]){
+
+				$promo_codes = explode(",", $settings["promo_codes"]);
+
+				$promo_code_found = false;
+
+				foreach($promo_codes as $key=>$val){
+					// entered promo code should matched
+					if(trim($val) == trim($_POST["promo_code"])) {
+						$promo_code_found = true;
+						break;
+					}
+				}
+
+			} else {
+				$promo_code_found = true;
+			}
+
+			if($promo_code_found){
+				$json = array("success" => true, "message" => "Applied Successfully");
+				
+				$reqParams = $_POST;
+
+				if(isset($reqParams["promo_code"])){
+					// PROMO_CAMP_ID is key for Promo Code at Paytm's end
+					$reqParams["PROMO_CAMP_ID"] = $reqParams["promo_code"];
+				
+					// unset promo code sent in request	
+					unset($reqParams["promo_code"]);
+
+					// unset CHECKSUMHASH
+					unset($reqParams["CHECKSUMHASH"]);
+				}
+
+				// create a new checksum with Param Code included and send it to browser
+				$json['CHECKSUMHASH'] = getChecksumFromArray($reqParams, $settings["secret_key"]);
+			} else {
+				$json = array("success" => false, "message" => "Incorrect Promo Code");
+			}
+
+			echo json_encode($json); exit;
+		}
+	}
+	/*
+	* Promo Code functions here
+	*/
+
+
+	/*
+	* Code to test Curl
+	*/
+	if(isset($_GET['paytm_action']) && $_GET['paytm_action'] == "curltest"){
+		add_action('the_content', 'curltest');
+	}
+
+	function curltest($content){
+
+		// phpinfo();exit;
+		$debug = array();
+
+		if(!function_exists("curl_init")){
+			$debug[0]["info"][] = "cURL extension is either not available or disabled. Check phpinfo for more info.";
+
+		// if curl is enable then see if outgoing URLs are blocked or not
+		} else {
+
+			// if any specific URL passed to test for
+			if(isset($_GET["url"]) && $_GET["url"] != ""){
+				$testing_urls = array($_GET["url"]);   
+			
+			} else {
+
+				// this site homepage URL
+				$server = get_site_url();
+
+				$settings = get_option( "woocommerce_paytm_settings", null );
+
+				$testing_urls = array(
+												$server,
+												"www.google.co.in",
+												$settings["transaction_status_url"]
+											);
+			}
+
+			// loop over all URLs, maintain debug log for each response received
+			foreach($testing_urls as $key=>$url){
+
+				$debug[$key]["info"][] = "Connecting to <b>" . $url . "</b> using cURL";
+
+				$ch = curl_init($url);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				$res = curl_exec($ch);
+
+				if (!curl_errno($ch)) {
+					$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+					$debug[$key]["info"][] = "cURL executed succcessfully.";
+					$debug[$key]["info"][] = "HTTP Response Code: <b>". $http_code . "</b>";
+
+					// $debug[$key]["content"] = $res;
+
+				} else {
+					$debug[$key]["info"][] = "Connection Failed !!";
+					$debug[$key]["info"][] = "Error Code: <b>" . curl_errno($ch) . "</b>";
+					$debug[$key]["info"][] = "Error: <b>" . curl_error($ch) . "</b>";
+					break;
+				}
+
+				curl_close($ch);
+			}
+		}
+
+		$content = "<center><h1>cURL Test for Paytm WooCommerce Plugin</h1></center><hr/>";
+		foreach($debug as $k=>$v){
+			$content .= "<ul>";
+			foreach($v["info"] as $info){
+				$content .= "<li>".$info."</li>";
+			}
+			$content .= "</ul>";
+
+			// echo "<div style='display:none;'>" . $v["content"] . "</div>";
+			$content .= "<hr/>";
+		}
+
+		return $content;
+	}
+	/*
+	* Code to test Curl
+	*/
 
 
 	/**
