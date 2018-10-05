@@ -220,14 +220,12 @@ function woocommerce_paytm_init() {
 					
 					if(($_POST['TXNAMOUNT']	== $order_amount)){
 						if($this -> log == "yes"){error_log("amount matched");}
-						// code by paytm team
 						$order_sent			      = $_POST['ORDERID'];
 						$res_code				  = $_POST['RESPCODE'];
 						$responseDescription      = $_POST['RESPMSG'];
 						$checksum_recv			  = $_POST['CHECKSUMHASH'];
 						$paramList			      = $_POST;
 						$order_amount = $_POST['TXNAMOUNT'];
-						//  code by paytm team
 						$all = $paramList;
 						if($this -> log == "yes"){error_log("received parameters = " . $all);}
 						$bool = "FALSE";
@@ -243,24 +241,7 @@ function woocommerce_paytm_init() {
 							$requestParamList['CHECKSUMHASH'] = $StatusCheckSum;
 							
 							// Call the PG's getTxnStatus() function for verifying the transaction status.
-							/*	19751/17Jan2018	*/
-								/*if($this -> mode==0)
-								{
-									$check_status_url = 'https://pguat.paytm.com/oltp/HANDLER_INTERNAL/getTxnStatus';
-								}
-								else
-								{
-									$check_status_url = 'https://secure.paytm.in/oltp/HANDLER_INTERNAL/getTxnStatus';
-								}*/
-
-								/*if($this -> mode==0) {
-									$check_status_url = 'https://securegw-stage.paytm.in/merchant-status/getTxnStatus';
-								} else {
-									$check_status_url = 'https://securegw.paytm.in/merchant-status/getTxnStatus';
-								}*/
-								$check_status_url = $this->transaction_status_url;
-							/*	19751/17Jan2018 end	*/
-							
+							$check_status_url = $this->transaction_status_url;
 							$responseParamList = callNewAPI($check_status_url, $requestParamList);
 							if($responseParamList['STATUS']=='TXN_SUCCESS' && $responseParamList['TXNAMOUNT']==$order_amount)
 							{
@@ -356,32 +337,6 @@ function woocommerce_paytm_init() {
 			$purpose="1";
 			$productDescription='paytm';
 			$ip=$_SERVER['REMOTE_ADDR'];
-			
-			/*$post_variables = Array(
-			"merchantIdentifier" => $this -> merchantIdentifier,
-			"orderId" => $order_id,
-			"returnUrl" => $redirect_url,
-			"buyerEmail" => $order -> billing_email,
-			"buyerFirstName" => $order -> billing_first_name,
-			"buyerLastName" => $order -> billing_last_name,
-			"buyerAddress" => $order -> billing_address_1,
-			"buyerCity" => $order -> billing_city,
-			"buyerState" => $order -> billing_state,
-			"buyerCountry" => $order -> billing_country,
-			"buyerPincode" => $order -> billing_postcode,
-			"buyerPhoneNumber" => $order -> billing_phone,
-			"txnType" => $txntype,
-			"ptmoption" => $ptmoption,
-			"mode" => $this -> mode,
-			"currency" => $currency,
-			"amount" => $amt, //Amount should be in paisa
-			"merchantIpAddress" => $ip,
-			"purpose" => $purpose,
-			"productDescription" => $productDescription,
-			"txnDate" => $txnDate
-
-			);*/
-			
 			$email = '';
 			$mobile_no = '';
 			
@@ -473,17 +428,6 @@ function woocommerce_paytm_init() {
 			
 			
             $paytm_args_array = array();
-           /* foreach($paytm_args as $key => $value){
-						if($key != 'checksum') {
-			if ($key == 'returnUrl') {
-                $paytm_args_array[] = "<input type='hidden' name='$key' value='". $value ."'/>";
-				} else {
-				$paytm_args_array[] = "<input type='hidden' name='$key' value='". $value ."'/>";
-				}
-				} else {
-				$paytm_args_array[] = "<input type='hidden' name='$key' value='$value'/>";
-				}
-            }*/
 			$paytm_args_array[] = "<input type='hidden' name='MID' value='".  $this -> merchantIdentifier ."'/>";
 			$paytm_args_array[] = "<input type='hidden' name='ORDER_ID' value='". $order_id ."'/>";
 			$paytm_args_array[] = "<input type='hidden' name='WEBSITE' value='". $this -> website ."'/>";
