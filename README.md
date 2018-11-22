@@ -30,4 +30,6 @@
 
   10. Your Woo-commerce plug-in is now installed. You can accept payment through Paytm.
 
+See Video : https://www.youtube.com/watch?v=cqdhF-9ApzE
+
 # In case of any query, please contact to Paytm.

@@ -24,3 +24,5 @@ This plugin is used to integrate Paytm payment gateway with Woocommerce for Word
 	* Production
 		* Transaction URL             => https://securegw.paytm.in/theia/processTransaction
 		* Transaction Status Url      => https://securegw.paytm.in/merchant-status/getTxnStatus
+
+See Video : https://www.youtube.com/watch?v=cqdhF-9ApzE
