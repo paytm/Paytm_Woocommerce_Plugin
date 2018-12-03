@@ -1,14 +1,17 @@
 <?php include('encdec_paytm.php');?>
 <?php
-/*
-Plugin Name: WooCommerce Paytm Payment Gateway
-Plugin URI: http://paytm.com/
-Description: Paytm Payment Gateway with Check Status.
-Version: 0.2
-Author: Paytm
-
-	License: GNU General Public License v3.0
-	License URI: http://www.gnu.org/licenses/gpl-3.0.html
+/**
+ * Plugin Name: Paytm Payment Gateway
+ * Plugin URI: https://github.com/Paytm-Payments/
+ * Description: This plugin allow you to accept payments using Paytm. This plugin will add a Paytm Payment option on WooCommerce checkout page, when user choses Paytm as Payment Method, he will redirected to Paytm website to complete his transaction and on completion his payment, paytm will send that user back to your website along with transactions details. This plugin uses server-to-server verification to add additional security layer for validating transactions. Admin can also see payment status for orders by navigating to WooCommerce > Orders from menu in admin.
+ * Version: 1.0
+ * Author: Paytm
+ * Author URI: http://paywithpaytm.com/
+ * Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
+ * Requires at least: 4.0.1
+ * Tested up to: 4.9.8
+ * Requires PHP: 5.6
+ * Text Domain: Paytm Payments
  */
 
 add_action('plugins_loaded', 'woocommerce_paytm_init', 0);
@@ -79,7 +82,10 @@ function woocommerce_paytm_init() {
 		}
 
 		private function getDefaultCallbackUrl(){
-			return get_site_url() . '/?page_id=7&wc-api=WC_paytm';
+			$checkout_page_id = get_option('woocommerce_checkout_page_id');
+			// fallback
+			$checkout_page_id = (int) $checkout_page_id > 0 ? $checkout_page_id : 7;
+			return get_site_url() . '/?page_id='.$checkout_page_id.'&wc-api=WC_paytm';
 		}
 
 		function init_form_fields(){   
@@ -154,7 +160,7 @@ function woocommerce_paytm_init() {
 				'redirect_page_id' => array(
 					'title'			=> __('Return Page'),
 					'type'			=> 'select',
-					'options'		=> $this->get_pages('Select Page'),
+					'options'		=> $this->get_pages('Default Page'),
 					'description'	=> "Page that customer will see after successful transaction"
 				),
 				'promo_code_status' => array(
@@ -314,7 +320,7 @@ function woocommerce_paytm_init() {
 						*/
 						
 						$bool = "FALSE";
-						$bool = verifychecksum_e($_POST, $this->secret_key, $_POST['CHECKSUMHASH']);
+						$bool = PaytmPayment::verifychecksum_e($_POST, $this->secret_key, $_POST['CHECKSUMHASH']);
 
 						/*
 						//$newcheck = Checksum::calculateChecksum($this->secret_key, $all);
@@ -331,11 +337,11 @@ function woocommerce_paytm_init() {
 														"ORDERID"	=> $order_id
 													);
 							
-							// $requestParamList["ORDERID"] = $_POST["ORDERID"]; // just for testing
+							$requestParamList["ORDERID"] = $_POST["ORDERID"]; // just for testing
 
-							$requestParamList['CHECKSUMHASH'] = getChecksumFromArray($requestParamList, $this->secret_key);
+							$requestParamList['CHECKSUMHASH'] = PaytmPayment::getChecksumFromArray($requestParamList, $this->secret_key);
 							
-							$responseParamList = callNewAPI($this->transaction_status_url, $requestParamList);
+							$responseParamList = PaytmPayment::callNewAPI($this->transaction_status_url, $requestParamList);
 
 							// echo "<PRE>";print_r($responseParamList);exit;
 
@@ -353,7 +359,6 @@ function woocommerce_paytm_init() {
 
 									} else {
 										$order->payment_complete();
-										$order->add_order_note('Mobile Wallet payment successful');
 										$order->add_order_note($this->msg['message']);
 										$woocommerce->cart->empty_cart();
 
@@ -399,7 +404,16 @@ function woocommerce_paytm_init() {
 
 				add_action('the_content', array(&$this, 'paytmShowMessage'));
 				
-				$redirect_url = $order->get_checkout_order_received_url();
+				// Redirection after paytm payments response.
+				if('success' == $this->msg['class']) {
+					if ( '' == $this->redirect_page_id || 0 == $this->redirect_page_id ) {
+						$redirect_url = $order->get_checkout_order_received_url();
+					} else {
+						$redirect_url = get_permalink( $this->redirect_page_id );
+					}
+				} else {
+					$redirect_url = wc_get_checkout_url();
+				}
 				
 				//For wooCoomerce 2.0
 				$redirect_url = add_query_arg(
@@ -441,6 +455,7 @@ function woocommerce_paytm_init() {
 			
 			}
 
+
 			// $order_id = "TEST_".strtotime("now")."_ORDERID-".$order_id; // just for testing
 
 
@@ -448,20 +463,20 @@ function woocommerce_paytm_init() {
 			$callback_url = html_entity_decode($this->callback_url);
 
 			$post_variables = array(
-					"MID"					=> $this->merchantIdentifier,
-					"ORDER_ID"			=> $order_id,
-					"CUST_ID"			=> $email,
-					"TXN_AMOUNT"		=> $order->order_total,
+					"MID"				=> $this->merchantIdentifier,
+					"ORDER_ID"			=> sanitize_text_field($order_id),
+					"CUST_ID"			=> sanitize_text_field($email),
+					"TXN_AMOUNT"		=> sanitize_text_field($order->order_total),
 					"CHANNEL_ID"		=> $this->channel_id,
 					"INDUSTRY_TYPE_ID"	=> $this->industry_type,
 					"WEBSITE"			=> $this->website,
-					"EMAIL"				=> $email,
-					"MOBILE_NO"			=> $mobile_no,
-					"CALLBACK_URL"		=> $callback_url
+					"EMAIL"				=> sanitize_email($email),
+					"MOBILE_NO"			=> sanitize_text_field($mobile_no),
+					"CALLBACK_URL"		=> sanitize_text_field($callback_url)
 			);
 
 			
-			$post_variables["CHECKSUMHASH"] = getChecksumFromArray($post_variables, $this->secret_key);
+			$post_variables["CHECKSUMHASH"] = PaytmPayment::getChecksumFromArray($post_variables, $this->secret_key);
 
 			// echo "<PRE>".http_build_query($post_variables);exit;
 
@@ -587,7 +602,7 @@ function woocommerce_paytm_init() {
 						<script type="text/javascript">
 						jQuery(function(){
 							jQuery("body").block({
-							message: "<img src=\"'.$woocommerce->plugin_url().'/assets/images/ajax-loader.gif\" alt=\"Redirecting…\" style=\"float:left; margin-right: 10px;\" />'.__('Thank you for your order. We are now redirecting you to paytm to make payment.').'",
+							message: "<img src=\"'.plugins_url( 'images/loader.gif', __FILE__ ).'\" alt=\"Redirecting…\" style=\"float:left; margin-right: 10px;\" />'.__('Thank you for your order. We are now redirecting you to paytm to make payment.').'",
 								overlayCSS: {
 									background: "#fff",
 									opacity: 0.6
@@ -650,7 +665,7 @@ function woocommerce_paytm_init() {
 		$settings = get_option( "woocommerce_paytm_settings", null );
 		// echo "<PRE>";print_r($settings);	echo __LINE__;exit;
 
-		if(isset($_POST["promo_code"]) && trim($_POST["promo_code"]) != "") {
+		if(isset($_POST["promo_code"]) && trim(sanitize_text_field($_POST["promo_code"])) != "") {
 
 			$json = array();
 
@@ -663,7 +678,7 @@ function woocommerce_paytm_init() {
 
 				foreach($promo_codes as $key=>$val){
 					// entered promo code should matched
-					if(trim($val) == trim($_POST["promo_code"])) {
+					if(trim($val) == trim(sanitize_text_field($_POST["promo_code"]))) {
 						$promo_code_found = true;
 						break;
 					}
@@ -680,7 +695,7 @@ function woocommerce_paytm_init() {
 
 				if(isset($reqParams["promo_code"])){
 					// PROMO_CAMP_ID is key for Promo Code at Paytm's end
-					$reqParams["PROMO_CAMP_ID"] = $reqParams["promo_code"];
+					$reqParams["PROMO_CAMP_ID"] = sanitize_text_field($reqParams["promo_code"]);
 				
 					// unset promo code sent in request	
 					unset($reqParams["promo_code"]);
@@ -690,7 +705,7 @@ function woocommerce_paytm_init() {
 				}
 
 				// create a new checksum with Param Code included and send it to browser
-				$json['CHECKSUMHASH'] = getChecksumFromArray($reqParams, $settings["secret_key"]);
+				$json['CHECKSUMHASH'] = PaytmPayment::getChecksumFromArray($reqParams, $settings["secret_key"]);
 			} else {
 				$json = array("success" => false, "message" => "Incorrect Promo Code");
 			}
@@ -723,33 +738,30 @@ function woocommerce_paytm_init() {
 
 			// if any specific URL passed to test for
 			if(isset($_GET["url"]) && $_GET["url"] != ""){
-				$testing_urls = array($_GET["url"]);   
+				$testing_urls = array(esc_url_raw($_GET["url"]));
 			
 			} else {
 
 				// this site homepage URL
 				$server = get_site_url();
 
-				$settings = get_option( "woocommerce_paytm_settings", null );
-
 				$testing_urls = array(
-												$server,
-												"www.google.co.in",
-												$settings["transaction_status_url"]
-											);
+										$server,
+										"https://www.gstatic.com/generate_204",
+										get_option('transaction_status_url')
+									);
 			}
 
 			// loop over all URLs, maintain debug log for each response received
 			foreach($testing_urls as $key=>$url){
 
 				$debug[$key]["info"][] = "Connecting to <b>" . $url . "</b> using cURL";
+				
+				$response = wp_remote_get($url);
 
-				$ch = curl_init($url);
-				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-				$res = curl_exec($ch);
+				if ( is_array( $response ) ) {
 
-				if (!curl_errno($ch)) {
-					$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+					$http_code = wp_remote_retrieve_response_code($response);
 					$debug[$key]["info"][] = "cURL executed succcessfully.";
 					$debug[$key]["info"][] = "HTTP Response Code: <b>". $http_code . "</b>";
 
@@ -757,12 +769,9 @@ function woocommerce_paytm_init() {
 
 				} else {
 					$debug[$key]["info"][] = "Connection Failed !!";
-					$debug[$key]["info"][] = "Error Code: <b>" . curl_errno($ch) . "</b>";
-					$debug[$key]["info"][] = "Error: <b>" . curl_error($ch) . "</b>";
-					break;
+					$debug[$key]["info"][] = "Error: <b>" . $response->get_error_message() . "</b>";
+					//break;
 				}
-
-				curl_close($ch);
 			}
 		}
 
