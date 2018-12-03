@@ -337,7 +337,7 @@ function woocommerce_paytm_init() {
 														"ORDERID"	=> $order_id
 													);
 							
-							$requestParamList["ORDERID"] = $_POST["ORDERID"]; // just for testing
+							// $requestParamList["ORDERID"] = $_POST["ORDERID"]; // just for testing
 
 							$requestParamList['CHECKSUMHASH'] = PaytmPayment::getChecksumFromArray($requestParamList, $this->secret_key);
 							
