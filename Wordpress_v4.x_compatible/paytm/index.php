@@ -9,7 +9,7 @@
  * Author URI: http://paywithpaytm.com/
  * Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
  * Requires at least: 4.0.1
- * Tested up to: 4.9.8
+ * Tested up to: 5.0
  * Requires PHP: 5.6
  * Text Domain: Paytm Payments
  */
@@ -24,12 +24,12 @@ function woocommerce_paytm_init() {
 	 * Localisation
 	 */
 	load_plugin_textdomain('wc-paytm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages');
-	if(isset($_GET['msg'])){
+	if(isset($_GET['paytm_response'])){
 		add_action('the_content', 'paytmShowMessage');
 	}
    
 	function paytmShowMessage($content){
-		return '<div class="box '.htmlentities($_GET['type']).'-box">'.htmlentities(urldecode($_GET['msg'])).'</div>'.$content;
+		return '<style>.paytm_response{padding: 15px;margin-bottom: 20px;border: 1px solid transparent;border-radius: 4px;text-align: center;}.paytm_response.error-box{color: #a94442;background-color: #f2dede;border-color: #ebccd1;} .paytm_response.success-box{color: #3c763d;background-color: #dff0d8;border-color: #d6e9c6;}</style><div class="paytm_response box '.htmlentities($_GET['type']).'-box">'.htmlentities(urldecode($_GET['paytm_response'])).'</div>'.$content;
 	}
 
 
@@ -280,155 +280,126 @@ function woocommerce_paytm_init() {
 		 * Check for valid paytm server callback // response processing //
 		 **/
 		function check_paytm_response(){
-
 			global $woocommerce;
 			if(isset($_REQUEST['ORDERID']) && isset($_REQUEST['RESPCODE'])){
-				
 				$order_id = $_POST['ORDERID'];
 
 				// $order_id = substr($order_id, strpos($order_id, "-") + 1); // just for testing
 
-				$responseDescription = $_REQUEST['RESPMSG'];
+				$responseDescription = (!empty($_REQUEST['RESPMSG'])) ? $_REQUEST['RESPMSG'] :"";
 
 				if ( version_compare( WOOCOMMERCE_VERSION, '2.0.0', '>=' ) ) {
 					$order = new WC_Order($order_id);
 				} else {
 					$order = new woocommerce_order($order_id);
 				}
-				
-				/*
-				if($this->log == "yes") {
-					error_log("Response Code = " . $_REQUEST['RESPCODE']);
-				}
-				*/
 
-				$this->msg['class'] = 'error';
-				$this->msg['message'] = "Thank you for shopping with us. However, the transaction has been Failed For Reason  : " . $responseDescription;
+				$isValidChecksum = PaytmPayment::verifychecksum_e($_POST, $this->secret_key, $_POST['CHECKSUMHASH']);
 
-				if($_REQUEST['RESPCODE'] !== 01) { // success
+				if ($isValidChecksum) {
 					
-					$order_amount = $order->order_total;
+					if($_POST['STATUS'] == 'TXN_SUCCESS'){
+						// Create an array having all required parameters for status query.
+						$requestParamList = array(
+							"MID"		=> $this->merchantIdentifier,
+							"ORDERID"	=> $order_id
+						);
 
-					// echo "<PRE>".$order->order_total;print_r($_POST);print_r($order);exit;
+						// $requestParamList["ORDERID"] = $_POST["ORDERID"]; // just for testing
 
-					if($_REQUEST['TXNAMOUNT'] == $order_amount){
-						
-						/*
-						if($this->log == "yes") {
-							error_log("amount matched");
-						}
-						*/
-						
-						$bool = "FALSE";
-						$bool = PaytmPayment::verifychecksum_e($_POST, $this->secret_key, $_POST['CHECKSUMHASH']);
+						$requestParamList['CHECKSUMHASH'] = PaytmPayment::getChecksumFromArray($requestParamList, $this->secret_key);
 
-						/*
-						//$newcheck = Checksum::calculateChecksum($this->secret_key, $all);
-						if($this->log == "yes") {
-							error_log("calculated checksum = " . $newch . " and checksum received = " . $_REQUEST['checksum']);
-						}
-						*/
-
-						if ($bool == "TRUE") {
-							
-							// Create an array having all required parameters for status query.
-							$requestParamList = array(
-														"MID"		=> $this->merchantIdentifier,
-														"ORDERID"	=> $order_id
-													);
-							
-							// $requestParamList["ORDERID"] = $_POST["ORDERID"]; // just for testing
-
-							$requestParamList['CHECKSUMHASH'] = PaytmPayment::getChecksumFromArray($requestParamList, $this->secret_key);
-							
-							$responseParamList = PaytmPayment::callNewAPI($this->transaction_status_url, $requestParamList);
-
-							// echo "<PRE>";print_r($responseParamList);exit;
+						$responseParamList = PaytmPayment::callNewAPI($this->transaction_status_url, $requestParamList);
+			
+						if(!empty($responseParamList['STATUS'])){
 
 							if($responseParamList['STATUS'] == 'TXN_SUCCESS' 
 								&& $responseParamList['TXNAMOUNT'] == $_POST['TXNAMOUNT']) {
-								
-								if($order->status !=='completed'){
+									if($order->status !=='completed'){
 									
-									// error_log("SUCCESS");
-									
-									$this->msg['message'] = "Thank you for your order . Your transaction has been successful.";
-									$this->msg['class'] = 'success';
-									
-									if($order->status == 'processing'){
-
-									} else {
-										$order->payment_complete();
-										$order->add_order_note($this->msg['message']);
-										$woocommerce->cart->empty_cart();
-
+										$this->msg['message'] = "Thank you for your order. Your transaction has been successful.";
+										$this->msg['class'] = 'success';
+										
+										if($order->status == 'processing'){
+	
+										} else {
+											$order->payment_complete();
+											$order->add_order_note($this->msg['message']);
+	
+										}
 									}
+							}else{
+								// Txn Failed
+								$msg = 'Your transaction has been failed.';
+								if($responseParamList['TXNAMOUNT'] != $_POST['TXNAMOUNT']) {
+									$msg = "Security Error. Amount mismatch!";
+								} else if(isset($responseParamList['RESPMSG']) && !empty($responseParamList['RESPMSG'])){
+									$msg .= ' Reason: '.$responseParamList['RESPMSG'];
+								} else {
+									$msg .= ' Please contact to seller if money has deducted.';
 								}
-							
-							} else {
-								$this->msg['class'] = 'error';
-								$this->msg['message'] = "It seems some issue in server to server communication. Kindly connect with administrator.";
-								$order->update_status('failed');
-								$order->add_order_note('Failed');
-								$order->add_order_note($this->msg['message']);
-							}						
-						
-						} else {
-							// server to server failed while call//
-							//error_log("api process failed");	
-							$this->msg['class'] = 'error';
-							$this->msg['message'] = "Severe Error Occur.";
-							$order->update_status('failed');
-							$order->add_order_note('Failed');
-							$order->add_order_note($this->msg['message']);
+								$this->txn_failure($order, $msg);
+							}
+						}else{
+							// S2S failed //
+							$msg = 'It seems some issue in server to server communication. Kindly connect with administrator.';
+							$this->txn_failure($order, $msg);
 						}
-						
-					} else {
-						// Order mismatch occur //
-						//error_log("order mismatch");	
-						$this->msg['class'] = 'error';
-						$this->msg['message'] = "Order Mismatch Occur";
-						$order->update_status('failed');
-						$order->add_order_note('Failed');
-						$order->add_order_note($this->msg['message']);
-						
+					
+					}else{
+						// txn failed
+						$msg = "Your transaction has been failed.";
+						if(!empty($responseDescription)){
+							$msg .= " Reason : " . $responseDescription;
+						} else {
+							$msg .= ' Please contact to seller if money has deducted.';
+						}
+						$this->txn_failure($order, $msg);
 					}
-				
-				} else {
-					$order->update_status('failed');
-					$order->add_order_note('Failed');
-					$order->add_order_note($responseDescription);
-					$order->add_order_note($this->msg['message']);
-				
+
+				}else{
+					// checksum failed
+					$msg = 'Security Error. Checksum Failed!!';
+					$this->txn_failure($order, $msg);
 				}
 
 				add_action('the_content', array(&$this, 'paytmShowMessage'));
 				
 				// Redirection after paytm payments response.
-				if('success' == $this->msg['class']) {
-					if ( '' == $this->redirect_page_id || 0 == $this->redirect_page_id ) {
+				if ( '' == $this->redirect_page_id || 0 == $this->redirect_page_id ) {
+					if('success' == $this->msg['class']) {
 						$redirect_url = $order->get_checkout_order_received_url();
-					} else {
-						$redirect_url = get_permalink( $this->redirect_page_id );
+					}else{
+						// $redirect_url = wc_get_checkout_url();
+						// $redirect_url = get_home_url();
+						$redirect_url = $order->get_view_order_url();
 					}
 				} else {
-					$redirect_url = wc_get_checkout_url();
+					$redirect_url = get_permalink( $this->redirect_page_id );
 				}
-				
+
+				$woocommerce->cart->empty_cart();
+
 				//For wooCoomerce 2.0
 				$redirect_url = add_query_arg(
 												array(
-													'msg'=> urlencode($this->msg['message']),
+													'paytm_response'=> urlencode($this->msg['message']),
 													'type'=>$this->msg['class']
 												), $redirect_url
 											);
 
 				wp_redirect( $redirect_url );
-				exit;		
-			} 
+				exit;
+				}
 		}
-		
-		
+		function txn_failure($order, $msg = ''){
+			$this->msg['class'] = 'error';
+			$this->msg['message'] = $msg;
+			$order->update_status('failed');
+			$order->add_order_note('Failed');
+			$order->add_order_note($this->msg['message']);
+		}
+			
 		/**
 		 * Generate paytm button link
 		 **/
