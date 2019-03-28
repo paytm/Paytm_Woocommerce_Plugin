@@ -12,6 +12,7 @@
  * Tested up to: 5.0
  * Requires PHP: 5.6
  * Text Domain: Paytm Payments
+ * WC tested up to: 3.5
  */
 
 add_action('plugins_loaded', 'woocommerce_paytm_init', 0);
