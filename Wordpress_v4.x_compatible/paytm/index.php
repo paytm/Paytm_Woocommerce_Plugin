@@ -702,6 +702,8 @@ function woocommerce_paytm_init() {
 		// phpinfo();exit;
 		$debug = array();
 
+		$settings = get_option( "woocommerce_paytm_settings", null );
+
 		if(!function_exists("curl_init")){
 			$debug[0]["info"][] = "cURL extension is either not available or disabled. Check phpinfo for more info.";
 
@@ -720,7 +722,7 @@ function woocommerce_paytm_init() {
 				$testing_urls = array(
 										$server,
 										"https://www.gstatic.com/generate_204",
-										get_option('transaction_status_url')
+										$settings['transaction_status_url']
 									);
 			}
 
@@ -743,6 +745,11 @@ function woocommerce_paytm_init() {
 					$debug[$key]["info"][] = "Connection Failed !!";
 					$debug[$key]["info"][] = "Error: <b>" . $response->get_error_message() . "</b>";
 					//break;
+				}
+
+				if((isset($_GET["url"]) && $_GET["url"] != "") || $url ==$settings['transaction_status_url']){
+					
+					$debug[$key]["info"][] = $response['body'];
 				}
 			}
 		}
