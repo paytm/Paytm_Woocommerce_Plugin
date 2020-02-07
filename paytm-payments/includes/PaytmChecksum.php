@@ -1,5 +1,5 @@
 <?php
-if(!class_exists('PaytmHelper')) :
+if(!class_exists('PaytmChecksum')) :
 class PaytmChecksum{
 
 	private static $iv = "@@@@&&&&####$$$$";
