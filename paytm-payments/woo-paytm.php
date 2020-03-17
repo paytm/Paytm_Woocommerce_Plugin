@@ -12,7 +12,7 @@
  * Requires PHP: 5.6
  * Text Domain: Paytm Payments
  * WC requires at least: 2.0.0
- * WC tested up to: 3.7
+ * WC tested up to: 4.0
  */
 
 
