@@ -76,7 +76,7 @@ function uninstall_paytm_plugin(){
 * check cURL working or able to communicate with Paytm
 * http://www.example.com/?paytm_action=curltest
 */
-if(sanitize_text_field($_GET['paytm_action']) == "curltest"){
+if(isset($_GET['paytm_action']) && sanitize_text_field($_GET['paytm_action']) == "curltest"){
 	add_action('the_content', 'curltest');
 }
 
@@ -328,7 +328,7 @@ if(PaytmConstants::SAVE_PAYTM_RESPONSE){
 		 */
 		load_plugin_textdomain('wc-paytm', false, dirname( plugin_basename( __FILE__ ) ) . '/languages');
 
-		if(sanitize_text_field($_GET['paytm_response'])){
+		if(isset($_GET['paytm_response']) && sanitize_text_field($_GET['paytm_response'])){
 			add_action('the_content', 'paytmResponseMessage');
 		}
 		
