@@ -125,8 +125,8 @@ class WC_paytm extends WC_Payment_Gateway {
 		}
 		
 		// Transaction URL is not working properly or not able to communicate with paytm
-		if(!empty(PaytmHelper::getTransactionStatusURL($this->getSetting('environment')))){
-			$response = (array)wp_remote_get(PaytmHelper::getTransactionStatusURL($this->getSetting('environment')));
+		if(!empty(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, $this->getSetting('environment')))){
+			$response = (array)wp_remote_get(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, $this->getSetting('environment')));
 			if(!empty($response['errors'])){
 				echo '<div class="paytm_response error-box">'. PaytmConstants::ERROR_CURL_WARNING .'</div>';
 			}
@@ -187,21 +187,59 @@ class WC_paytm extends WC_Payment_Gateway {
 
 		return $data;
 	}
+	/* 
+	* Get the transaction token
+	*/
+	public function blinkCheckoutSend($paramData = array())
+	{
+		$data=array();
+		if(!empty($paramData['amount']) && (int)$paramData['amount'] > 0)
+		{
+			/* body parameters */
+			$paytmParams["body"] = array(
+				"requestType" => "Payment",
+				"mid" => $this->getSetting('merchant_id'),
+				"websiteName" => $this->getSetting('website'),
+				"orderId" => $paramData['order_id'],
+				"callbackUrl" => $this->getCallbackUrl(),
+				"txnAmount" => array(
+					"value" => (int)$paramData['amount'],
+					"currency" => "INR",
+				),
+				"userInfo" => array(
+					"custId" => $paramData['cust_id'],
+				),
+			);
+			
+			$checksum = PaytmChecksum::generateSignature(json_encode($paytmParams["body"], JSON_UNESCAPED_SLASHES), $this->getSetting('merchant_key')); 
+			
+			$paytmParams["head"] = array(
+				"signature"	=> $checksum
+			);
+			
+			/* prepare JSON string for request */
+			$post_data = json_encode($paytmParams, JSON_UNESCAPED_SLASHES);
 
+			$url = PaytmHelper::getPaytmURL(PaytmConstants::INITIATE_TRANSACTION_URL, $this->getSetting('environment')) . '?mid='.$paytmParams["body"]["mid"].'&orderId='.$paytmParams["body"]["orderId"];
+			
+			$res= PaytmHelper::executecUrl($url, $paytmParams);
+			
+			if(!empty($res['body']['resultInfo']['resultStatus']) && $res['body']['resultInfo']['resultStatus'] == 'S'){
+				$data['txnToken']= $res['body']['txnToken'];
+			}
+			else
+			{
+				$data['txnToken']="";
+			}
+			/* $txntoken = json_encode($res); */
+		}
+		return $data;
+	}
 	/**
 	 * Generate paytm button link
 	 **/
 	public function generate_paytm_form($order_id){
 		global $woocommerce;
-		echo '<p>'.__(PaytmConstants::FRONT_MESSAGE, $this->id).'</p>';
-
-		$transaction_url = PaytmHelper::getTransactionURL($this->getSetting('environment'));
-
-		if(empty($transaction_url)){
-			echo  '<div class="paytm_response box error-box">'. __(NOT_FOUND_TXN_URL) .'</div>';
-			return;
-		}
-
 		if ( version_compare( WOOCOMMERCE_VERSION, '2.0.0', '>=' ) ) {
 			$order = new WC_Order($order_id);
 		} else {
@@ -211,12 +249,6 @@ class WC_paytm extends WC_Payment_Gateway {
 		$order_id = PaytmHelper::getPaytmOrderId($order_id);
 
 		$getOrderInfo = $this->getOrderInfo($order);
-	
-		$mobile_no = $cust_id = $email = '';
-
-		if(!empty($getOrderInfo['contact'])){
-			$mobile_no = preg_replace('#[^0-9]{0,13}#is','',$getOrderInfo['contact']);	
-		}
 		
 		if(!empty($getOrderInfo['email'])){
 			$cust_id = $email = $getOrderInfo['email'];
@@ -224,59 +256,44 @@ class WC_paytm extends WC_Payment_Gateway {
 			$cust_id = "CUST_".$order_id;
 		}
 
-		$parameters = array(
-				"MID"				=> $this->getSetting('merchant_id'),
-				"CUST_ID"			=> sanitize_text_field($cust_id),
-				"TXN_AMOUNT"		=> sanitize_text_field($getOrderInfo['amount']),
-				"CALLBACK_URL" 		=> $this->getCallbackUrl(),
-				"ORDER_ID"  		=> $order_id,
-				"CHANNEL_ID" 		=> PaytmConstants::CHANNEL_ID,
-				"INDUSTRY_TYPE_ID"	=> $this->getSetting('industry_type'),
-				"WEBSITE"			=> $this->getSetting('website'),
-				"EMAIL"				=> sanitize_email($email),
-				"MOBILE_NO"			=> sanitize_text_field($mobile_no)
-		);
-
-		$parameters["CHECKSUMHASH"]		= PaytmChecksum::generateSignature($parameters, $this->getSetting('merchant_key'));
-
-		$parameters["X-REQUEST-ID"] 	=  PaytmConstants::X_REQUEST_ID . WOOCOMMERCE_VERSION;
-
-		$paytm_fields = "";
-		foreach($parameters as $k => $v){
-			$paytm_fields .= '<input type="hidden" name="'. $k .'" value="'. $v .'"/>';
-		}
-
-		return 
-				'<form action="'.$transaction_url.'" method="POST" id="paytm_form_redirect">
-					' . $paytm_fields . '
-					<input type="submit" class="button-alt" id="submit_paytm_form_redirect" value="'.__(PaytmConstants::PAYTM_PAY_BUTTON, $this->id).'" />
-					<a class="button cancel" href="'.$order->get_cancel_order_url().'">
-						'.__(PaytmConstants::CANCEL_ORDER_BUTTON, $this->id).'
-					</a>
-					<script type="text/javascript">
-					jQuery(function(){
-						jQuery("body").block({
-						message: "'.__(PaytmConstants::POPUP_LOADER_TEXT).'",
-							overlayCSS: {
-								background: "#fff",
-								opacity: 0.6
-							}, css: {
-								padding: 20,
-								textAlign: "center",
-								color: "#555",
-								border: "3px solid #aaa",
-								backgroundColor: "#fff",
-								cursor: "wait",
-								lineHeight: "32px"
-							}
-						});
-						
-						document.getElementById("paytm_form_redirect").submit();
-						});
-					</script>
-				</form>';
+		$wait_msg='<div id="paytm-pg-spinner" class="paytm-woopg-loader"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div><div class="bounce4"></div><div class="bounce5"></div><p class="loading-paytm">Loading Paytm...</p><a href="" class="refresh-payment">Pay</a></div><div class="paytm-overlay paytm-woopg-loader"></div>';
+		$paramData = array('amount' => $getOrderInfo['amount'], 'order_id' => $order_id, 'cust_id' => $cust_id);
+		$data= $this->blinkCheckoutSend($paramData);
+			
+			return '<script type="text/javascript">
+			function invokeBlinkCheckoutPopup(){
+			window.Paytm.CheckoutJS.init({
+				"root": "",
+				"flow": "DEFAULT",
+				"data": {
+					"orderId": "'.$order_id.'",
+					"token": "'.$data['txnToken'].'",
+					"tokenType": "TXN_TOKEN",
+					"amount": "'.$getOrderInfo['amount'].'",
+				},
+				handler:{
+						transactionStatus:function(data){
+					} , 
+					notifyMerchant:function notifyMerchant(eventName,data){
+						if(eventName=="APP_CLOSED")
+						{
+							jQuery(".loading-paytm").hide();
+							jQuery(".refresh-payment").show();
+						}
+						console.log("notify merchant about the payment state");
+					} 
+					}
+			}).then(function(){
+				window.Paytm.CheckoutJS.invoke();
+			});
 			}
-	
+			jQuery(function(){
+				setTimeout(function(){invokeBlinkCheckoutPopup()},2000);
+			});
+			</script>'.$wait_msg.'
+			';
+		
+		}
 
 
 	/**
@@ -369,7 +386,8 @@ class WC_paytm extends WC_Payment_Gateway {
 						/* number of retries untill cURL gets success */
 						$retry = 1;
 						do{
-							$resParams = PaytmHelper::executecUrl(PaytmHelper::getTransactionStatusURL($this->getSetting('environment')), $reqParams);
+							
+							$resParams = PaytmHelper::executecUrl(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, $this->getSetting('environment')), $reqParams);
 							$retry++;
 						} while(!$resParams['STATUS'] && $retry < PaytmConstants::MAX_RETRY_COUNT);
 						/* number of retries untill cURL gets success */
@@ -396,7 +414,7 @@ class WC_paytm extends WC_Payment_Gateway {
 									$this->msg['class']		= 'success';
 									
 									if($order->status !== 'processing'){			
-										$order->payment_complete();
+										$order->payment_complete($resParams['TXNID']);
 										$order->reduce_order_stock();
 
 										$message = "<br/>".sprintf(__(PaytmConstants::TRANSACTION_ID),$resParams['TXNID'])."<br/>".sprintf(__(PaytmConstants::PAYTM_ORDER_ID),$resParams['ORDERID']);
@@ -431,17 +449,17 @@ class WC_paytm extends WC_Payment_Gateway {
 
 			$redirect_url = $this->redirectUrl($order);
 
-			$this->setMessages();
+			$this->setMessages($this->msg['message'],$this->msg['class']);
 			
 			//For wooCoomerce 2.0
-			if($this->msg['class'] == 'error'){
+			/* if($this->msg['class'] == 'error'){
 				$redirect_url = add_query_arg(
 					array(
 						'paytm_response'	=> urlencode($this->msg['message']),
 						'type'				=> $this->msg['class']
 					), $redirect_url
 				);
-			}
+			} */
 			
 			wp_redirect( $redirect_url );
 			exit;
@@ -460,7 +478,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		}
 	}
 
-	private function setMessages(){
+	/* private function setMessages(){
 		global $woocommerce;
 		if ( function_exists( 'wc_add_notice' ) ) {
 			wc_add_notice( $msg['message'], $msg['class'] );
@@ -469,6 +487,20 @@ class WC_paytm extends WC_Payment_Gateway {
 				$woocommerce->add_message( $msg['message']);
 			}else{
 				$woocommerce->add_error( $msg['message'] );
+
+			}
+			$woocommerce->set_messages();
+		}	
+	} */
+	private function setMessages($message='',$class=''){
+		global $woocommerce;
+		if ( function_exists( 'wc_add_notice' ) ) {
+			wc_add_notice( $message, $class );
+		} else {
+			if( 'success' == $class ) {
+				$woocommerce->add_message( $message);
+			}else{
+				$woocommerce->add_error( $message );
 
 			}
 			$woocommerce->set_messages();
@@ -482,7 +514,7 @@ class WC_paytm extends WC_Payment_Gateway {
 			if('success' == $this->msg['class']) {
 				$redirect_url = $order->get_checkout_order_received_url();
 			}else{
-				// $redirect_url = wc_get_checkout_url();
+				//$redirect_url = wc_get_checkout_url();
 				$redirect_url = $order->get_view_order_url();
 			}
 		}else{

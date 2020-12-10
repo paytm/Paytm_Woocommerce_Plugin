@@ -70,7 +70,16 @@ function uninstall_paytm_plugin(){
     $wpdb->query($sql);
     delete_option('woocommerce_paytm_settings');
 }
-
+function paytmWoopayment_enqueue_style() {
+    wp_enqueue_style('paytmWoopayment', plugin_dir_url( __FILE__ ) . 'assets/css/paytm-payments.css', array(), '', '');
+}
+add_action('wp_head', 'paytmWoopayment_enqueue_style');
+function paytmWoopayment_blinkcheckoutScript() {
+	$settings = get_option( "woocommerce_paytm_settings" );
+	$checkout_url          = str_replace('MID',$settings['merchant_id'], PaytmHelper::getPaytmURL(PaytmConstants::CHECKOUT_JS_URL, $settings['environment']));
+   echo '<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" ></script>';
+}
+add_action('wp_head', 'paytmWoopayment_blinkcheckoutScript');
 
 /*
 * check cURL working or able to communicate with Paytm
@@ -102,8 +111,8 @@ function curltest($content){
 			$testing_urls = array(
 								$server,
 								"https://www.gstatic.com/generate_204",
-								PaytmConstants::TRANSACTION_STATUS_URL_PRODUCTION,
-								PaytmConstants::TRANSACTION_STATUS_URL_STAGING
+								PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 1),
+								PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 0)
 							);
 		}
 		$testing_urls = array_filter($testing_urls);
@@ -127,7 +136,7 @@ function curltest($content){
 				$debug[$key]["info"][] = "Error: <b>" . $response->get_error_message() . "</b>";
 			}
 
-			if((!empty($_GET["url"])) || (in_array($url, array(PaytmConstants::TRANSACTION_STATUS_URL_PRODUCTION , PaytmConstants::TRANSACTION_STATUS_URL_STAGING)))){
+			if((!empty($_GET["url"])) || (in_array($url, array(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 1) , PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 0))))){
 				$debug[$key]["info"][] = "Response: <br/><!----- Response Below ----->" . wp_remote_retrieve_body($response);
 			}
 		}

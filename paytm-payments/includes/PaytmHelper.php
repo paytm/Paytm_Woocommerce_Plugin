@@ -23,14 +23,12 @@ class PaytmHelper{
 		return $order_id;
 	}
 
-	/**
-	* exclude timestap with order id
-	*/
-	public static function getTransactionURL($isProduction = 0){		
+	public static function getPaytmURL($url = false, $isProduction = 0){
+		if(!$url) return false; 
 		if($isProduction == 1){
-			return PaytmConstants::TRANSACTION_URL_PRODUCTION;
+			return PaytmConstants::PRODUCTION_HOST . $url;
 		}else{
-			return PaytmConstants::TRANSACTION_URL_STAGING;			
+			return PaytmConstants::STAGING_HOST . $url;			
 		}
 	}
 	/**
@@ -70,13 +68,14 @@ class PaytmHelper{
 	public static function executecUrl($apiURL, $requestParamList) {
 
         $jsonResponse = wp_remote_post($apiURL, array(
-            'headers'     => array(),
-            'body'        => json_encode($requestParamList),
+            'headers'     => array("Content-Type"=> "application/json"),
+            'body'        => json_encode($requestParamList, JSON_UNESCAPED_SLASHES),
         ));
 
         //$response_code = wp_remote_retrieve_response_code( $jsonResponse );
         $response_body = wp_remote_retrieve_body( $jsonResponse );
         $responseParamList = json_decode($response_body, true);
+        $responseParamList['request'] = $requestParamList;
         return $responseParamList;
     }
 

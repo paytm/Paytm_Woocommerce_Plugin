@@ -1,15 +1,21 @@
 <?php
 
 class PaytmConstants{
-	CONST TRANSACTION_URL_PRODUCTION			= "https://securegw.paytm.in/order/process";
 	CONST TRANSACTION_STATUS_URL_PRODUCTION		= "https://securegw.paytm.in/order/status";
-
-	CONST TRANSACTION_URL_STAGING				= "https://securegw-stage.paytm.in/order/process";
 	CONST TRANSACTION_STATUS_URL_STAGING		= "https://securegw-stage.paytm.in/order/status";
+
+	CONST PRODUCTION_HOST						= "https://securegw.paytm.in/";
+	CONST STAGING_HOST							= "https://securegw-stage.paytm.in/";
+
+	CONST ORDER_PROCESS_URL						= "order/process";
+	CONST ORDER_STATUS_URL						= "order/status";
+	CONST INITIATE_TRANSACTION_URL				= "theia/api/v1/initiateTransaction";
+	CONST CHECKOUT_JS_URL						= "merchantpgpui/checkoutjs/merchants/MID.js";
+
 
 	CONST SAVE_PAYTM_RESPONSE 					= true;
 	CONST CHANNEL_ID							= "WEB";
-	CONST APPEND_TIMESTAMP						= false;
+	CONST APPEND_TIMESTAMP						= true;
 	CONST X_REQUEST_ID							= "PLUGIN_WOOCOMMERCE_";
 	CONST PLUGIN_DOC_URL						= "https://developer.paytm.com/docs/eCommerce-plugin/woocommerce/";
 
