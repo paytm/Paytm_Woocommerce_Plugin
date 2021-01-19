@@ -75,9 +75,13 @@ function paytmWoopayment_enqueue_style() {
 }
 add_action('wp_head', 'paytmWoopayment_enqueue_style');
 function paytmWoopayment_blinkcheckoutScript() {
+
+if(is_checkout()){
 	$settings = get_option( "woocommerce_paytm_settings" );
 	$checkout_url          = str_replace('MID',$settings['merchant_id'], PaytmHelper::getPaytmURL(PaytmConstants::CHECKOUT_JS_URL, $settings['environment']));
    echo '<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" ></script>';
+}   
+   
 }
 add_action('wp_head', 'paytmWoopayment_blinkcheckoutScript');
 
