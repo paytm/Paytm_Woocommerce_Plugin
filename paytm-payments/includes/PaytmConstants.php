@@ -16,6 +16,7 @@ class PaytmConstants{
 	CONST SAVE_PAYTM_RESPONSE 					= true;
 	CONST CHANNEL_ID							= "WEB";
 	CONST APPEND_TIMESTAMP						= true;
+	CONST ORDER_PREFIX							= "";
 	CONST X_REQUEST_ID							= "PLUGIN_WOOCOMMERCE_";
 	CONST PLUGIN_DOC_URL						= "https://developer.paytm.com/docs/eCommerce-plugin/woocommerce/";
 

@@ -74,16 +74,7 @@ function paytmWoopayment_enqueue_style() {
     wp_enqueue_style('paytmWoopayment', plugin_dir_url( __FILE__ ) . 'assets/css/paytm-payments.css', array(), '', '');
 }
 add_action('wp_head', 'paytmWoopayment_enqueue_style');
-function paytmWoopayment_blinkcheckoutScript() {
 
-if(is_checkout()){
-	$settings = get_option( "woocommerce_paytm_settings" );
-	$checkout_url          = str_replace('MID',$settings['merchant_id'], PaytmHelper::getPaytmURL(PaytmConstants::CHECKOUT_JS_URL, $settings['environment']));
-   echo '<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" ></script>';
-}   
-   
-}
-add_action('wp_head', 'paytmWoopayment_blinkcheckoutScript');
 
 /*
 * check cURL working or able to communicate with Paytm

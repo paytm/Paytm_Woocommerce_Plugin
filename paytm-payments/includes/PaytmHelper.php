@@ -8,9 +8,9 @@ class PaytmHelper{
 	*/
 	public static function getPaytmOrderId($order_id){
 		if($order_id && PaytmConstants::APPEND_TIMESTAMP){
-			return $order_id . '_' . date("YmdHis");
+			return PaytmConstants::ORDER_PREFIX.$order_id . '_' . date("YmdHis");
 		}else{
-			return $order_id;
+			return PaytmConstants::ORDER_PREFIX.$order_id;
 		}
 	}
 	/**
@@ -20,6 +20,9 @@ class PaytmHelper{
 		if(($pos = strrpos($order_id, '_')) !== false && PaytmConstants::APPEND_TIMESTAMP) {
 			$order_id = substr($order_id, 0, $pos);
 		}
+		if (substr($order_id, 0, strlen(PaytmConstants::ORDER_PREFIX)) == PaytmConstants::ORDER_PREFIX) {
+			$order_id = substr($order_id, strlen(PaytmConstants::ORDER_PREFIX));
+		} 
 		return $order_id;
 	}
 

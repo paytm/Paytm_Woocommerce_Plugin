@@ -86,7 +86,8 @@
 }
 
 .refresh-payment {
-    display: none;
+    display: inline;
+    margin-right: 20px;
     width: 100px;
     background: rgb(0, 185, 245);
     padding: 10px 15px;
@@ -94,3 +95,4 @@
     color: #fff;
     text-decoration: none;
 }
+.paytm-action-btn{display: block;padding: 25px;}

@@ -255,41 +255,51 @@ class WC_paytm extends WC_Payment_Gateway {
 		}else{
 			$cust_id = "CUST_".$order_id;
 		}
-
-		$wait_msg='<div id="paytm-pg-spinner" class="paytm-woopg-loader"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div><div class="bounce4"></div><div class="bounce5"></div><p class="loading-paytm">Loading Paytm...</p><a href="" class="refresh-payment">Pay</a></div><div class="paytm-overlay paytm-woopg-loader"></div>';
+		$settings = get_option( "woocommerce_paytm_settings" );
+		$checkout_url         = str_replace('MID',$settings['merchant_id'], PaytmHelper::getPaytmURL(PaytmConstants::CHECKOUT_JS_URL, $settings['environment']));
+		   echo '';
+		   
+		$wait_msg='<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" onload="invokeBlinkCheckoutPopup();"></script><div id="paytm-pg-spinner" class="paytm-woopg-loader"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div><div class="bounce4"></div><div class="bounce5"></div><p class="loading-paytm">Loading Paytm...</p></div><div class="paytm-overlay paytm-woopg-loader"></div><div class="paytm-action-btn"><a href="" class="refresh-payment re-invoke">Pay Now</a><a href="'.wc_get_checkout_url().'" class="refresh-payment">Cancel</a></div>';
 		$paramData = array('amount' => $getOrderInfo['amount'], 'order_id' => $order_id, 'cust_id' => $cust_id);
 		$data= $this->blinkCheckoutSend($paramData);
 			
 			return '<script type="text/javascript">
 			function invokeBlinkCheckoutPopup(){
-			window.Paytm.CheckoutJS.init({
-				"root": "",
-				"flow": "DEFAULT",
-				"data": {
-					"orderId": "'.$order_id.'",
-					"token": "'.$data['txnToken'].'",
-					"tokenType": "TXN_TOKEN",
-					"amount": "'.$getOrderInfo['amount'].'",
-				},
-				handler:{
-						transactionStatus:function(data){
-					} , 
-					notifyMerchant:function notifyMerchant(eventName,data){
+				console.log("method called");
+				var config = {
+					"root": "",
+					"flow": "DEFAULT",
+					"data": {
+					  "orderId": "'.$order_id.'", 
+					  "token": "'.$data['txnToken'].'", 
+					  "tokenType": "TXN_TOKEN",
+					  "amount": "'.$getOrderInfo['amount'].'"
+					},
+					"handler": {
+					  "notifyMerchant": function(eventName,data){
+						console.log("notifyMerchant handler function called");
 						if(eventName=="APP_CLOSED")
 						{
 							jQuery(".loading-paytm").hide();
+							jQuery("#paytm-pg-spinner").hide();
+							jQuery(".paytm-overlay").hide();
 							jQuery(".refresh-payment").show();
 						}
-						console.log("notify merchant about the payment state");
-					} 
+					  } 
 					}
-			}).then(function(){
-				window.Paytm.CheckoutJS.invoke();
-			});
+				  };
+			
+				  if(window.Paytm && window.Paytm.CheckoutJS){
+					  window.Paytm.CheckoutJS.onLoad(function excecuteAfterCompleteLoad() {
+						  window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
+							  window.Paytm.CheckoutJS.invoke();
+						  }).catch(function onError(error){
+							  console.log("error => ",error);
+						  });
+					  });
+				  } 
 			}
-			jQuery(function(){
-				setTimeout(function(){invokeBlinkCheckoutPopup()},2000);
-			});
+			jQuery(document).ready(function(){ jQuery(".re-invoke").on("click",function(){ window.Paytm.CheckoutJS.invoke(); return false; }); });
 			</script>'.$wait_msg.'
 			';
 		
@@ -428,7 +438,7 @@ class WC_paytm extends WC_Payment_Gateway {
 								if(!empty($responseDescription)){
 									$message .= sprintf(__(PaytmConstants::REASON),$responseDescription);
 								}
-								$this->setStatusMessage($order, $message, 'on-hold');
+								$this->setStatusMessage($order, $message, 'pending');
 							}else{
 								$message = __(PaytmConstants::ERROR_ORDER_MESSAGE);
 								if(!empty($responseDescription)){
