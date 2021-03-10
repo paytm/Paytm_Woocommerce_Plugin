@@ -203,7 +203,7 @@ class WC_paytm extends WC_Payment_Gateway {
 				"orderId" => $paramData['order_id'],
 				"callbackUrl" => $this->getCallbackUrl(),
 				"txnAmount" => array(
-					"value" => (int)$paramData['amount'],
+					"value" => $paramData['amount'],
 					"currency" => "INR",
 				),
 				"userInfo" => array(
