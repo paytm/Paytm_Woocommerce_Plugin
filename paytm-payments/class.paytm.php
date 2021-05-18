@@ -11,7 +11,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		$this->id 							= PaytmConstants::ID;
 		$this->method_title 				= PaytmConstants::METHOD_TITLE;
 		$this->method_description 			= PaytmConstants::METHOD_DESCRIPTION;
-		$this->icon 						= plugins_url('images/paytm.png' , __FILE__);
+		$this->icon 						= plugins_url('images/paytm_logo.png' , __FILE__);
 		$this->has_fields 					= false;
 
 		$this->init_form_fields();
@@ -71,7 +71,7 @@ class WC_paytm extends WC_Payment_Gateway {
 				'title'			=> __('Description', $this->id),
 				'type'			=> 'textarea',
 				'description'	=> __('This controls the description which the user sees during checkout.', $this->id),
-				'default'		=> __(PaytmConstants::DESCRIPTION, $this->id)
+				'default'		=> __(PaytmConstants::DESCRIPTION.'<br /><img src="'.plugins_url('images/paytm_detail.png' , __FILE__).'" />', $this->id)
 			),
 			'merchant_id'=> array(
 				'title'			=> __('Merchant ID'),
@@ -262,7 +262,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		$wait_msg='<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" onload="invokeBlinkCheckoutPopup();"></script><div id="paytm-pg-spinner" class="paytm-woopg-loader"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div><div class="bounce4"></div><div class="bounce5"></div><p class="loading-paytm">Loading Paytm...</p></div><div class="paytm-overlay paytm-woopg-loader"></div><div class="paytm-action-btn"><a href="" class="refresh-payment re-invoke">Pay Now</a><a href="'.wc_get_checkout_url().'" class="refresh-payment">Cancel</a></div>';
 		$paramData = array('amount' => $getOrderInfo['amount'], 'order_id' => $order_id, 'cust_id' => $cust_id);
 		$data= $this->blinkCheckoutSend($paramData);
-			
+		
 			return '<script type="text/javascript">
 			function invokeBlinkCheckoutPopup(){
 				console.log("method called");
@@ -274,6 +274,10 @@ class WC_paytm extends WC_Payment_Gateway {
 					  "token": "'.$data['txnToken'].'", 
 					  "tokenType": "TXN_TOKEN",
 					  "amount": "'.$getOrderInfo['amount'].'"
+					},
+					"integration": {
+						"platform": "Woocommerce",
+						"version": "'.WOOCOMMERCE_VERSION.'|'.PAYTM_VERSION.'"
 					},
 					"handler": {
 					  "notifyMerchant": function(eventName,data){
@@ -288,7 +292,6 @@ class WC_paytm extends WC_Payment_Gateway {
 					  } 
 					}
 				  };
-			
 				  if(window.Paytm && window.Paytm.CheckoutJS){
 					  window.Paytm.CheckoutJS.onLoad(function excecuteAfterCompleteLoad() {
 						  window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
