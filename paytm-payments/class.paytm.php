@@ -4,6 +4,7 @@
  */
 class WC_paytm extends WC_Payment_Gateway {
 	
+
 	protected $msg = array();
 
 	public function __construct() {
@@ -35,7 +36,11 @@ class WC_paytm extends WC_Payment_Gateway {
 			add_action( 'woocommerce_update_options_payment_gateways', array( &$this, 'process_admin_options' ) );
 		}
 		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
+
+		add_action( 'after_plugin_row_' . plugin_basename( $this->file ), array( $this, 'ppec_upgrade_notice' ), 10, 3 );
+		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/css/admin/paytm-payments.css', array(), '', '');
 	}
+	
 	
 	private function getSetting($key)
 	{
@@ -53,60 +58,69 @@ class WC_paytm extends WC_Payment_Gateway {
 	}
 
 	public function init_form_fields(){
-
-		$this->form_fields = array(
-			'enabled'			=> array(
-				'title' 			=> __('Enable/Disable', $this->id),
-				'type' 			=> 'checkbox',
-				'label'			=> __('Enable Paytm Payments.', $this->id),
-				'default'		=> 'no'
-			),
-			'title' => array(
-				'title'			=> __('Title', $this->id),
-				'type'			=> 'text',
-				'description'	=> __('This controls the title which the user sees during checkout.', $this->id),
-				'default'		=> __(PaytmConstants::TITLE, $this->id),
-			),
-			'description' => array(
-				'title'			=> __('Description', $this->id),
-				'type'			=> 'textarea',
-				'description'	=> __('This controls the description which the user sees during checkout.', $this->id),
-				'default'		=> __(PaytmConstants::DESCRIPTION.'<br /><img src="'.plugins_url('images/paytm_detail.png' , __FILE__).'" />', $this->id)
-			),
-			'merchant_id'=> array(
-				'title'			=> __('Merchant ID'),
-				'type' 			=> 'text',
-				'custom_attributes' => array( 'required' => 'required' ),
-				'description'	=> __('Enter your Merchant ID provided by Paytm', $this->id)
-			),
-			'merchant_key' => array(
-				'title'			=> __('Merchant Key'),
-				'type'			=> 'text',
-				'custom_attributes' => array( 'required' => 'required' ),
-				'description'	=> __('Enter your Merchant Key provided by Paytm', $this->id),
-			),
-			'website' => array(
-				'title'			=> __('Website Name'),
-				'type'			=> 'text',
-				'custom_attributes' => array( 'required' => 'required' ),
-				'description'	=> __('Enter your Website Name provded by Paytm', $this->id),
-			),
-			'industry_type' => array(
-				'title'			=> __('Industry Type'),
-				'type'			=> 'text',
-				'custom_attributes' => array( 'required' => 'required' ),
-				'description'	=> __('Eg. Retail, Entertainment etc.', $this->id),
-			),
-			'environment' => array(
-				'title'			=> __('Environment'), $this->id,
-				'type'			=> 'select',
-				'custom_attributes' => array( 'required' => 'required' ),
-				'options'		=> array("0" => "Staging", "1" => "Production"),
-				'description'	=> __('Select environment.', $this->id),
-				'default'		=> '0'
-			)
-		);
-	}
+        $checkout_page_id = get_option('woocommerce_checkout_page_id');
+        $checkout_page_id = (int) $checkout_page_id > 0 ? $checkout_page_id : 7;
+        $webhookUrl = get_site_url() . '/?wc-api=WC_paytm&webhook=yes';
+        $this->form_fields = array(
+            'enabled'           => array(
+                'title'             => __('Enable/Disable', $this->id),
+                'type'          => 'checkbox',
+                'label'         => __('Enable Paytm Payments.', $this->id),
+                'default'       => 'no'
+            ),
+            'title' => array(
+                'title'         => __('Title', $this->id),
+                'type'          => 'text',
+                'description'   => __('This controls the title which the user sees during checkout.', $this->id),
+                'default'       => __(PaytmConstants::TITLE, $this->id),
+            ),
+            'description' => array(
+                'title'         => __('Description', $this->id),
+                'type'          => 'textarea',
+                'description'   => __('This controls the description which the user sees during checkout.', $this->id),
+                'default'       => __(PaytmConstants::DESCRIPTION, $this->id)
+            ),
+            'merchant_id'=> array(
+                'title'         => __('Merchant ID'),
+                'type'          => 'text',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'description'   => __('Enter your Merchant ID provided by Paytm', $this->id)
+            ),
+            'merchant_key' => array(
+                'title'         => __('Merchant Key'),
+                'type'          => 'text',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'description'   => __('Enter your Merchant Key provided by Paytm', $this->id),
+            ),
+            'website' => array(
+                'title'         => __('Website Name'),
+                'type'          => 'text',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'description'   => __('Enter your Website Name provded by Paytm', $this->id),
+            ),
+            'industry_type' => array(
+                'title'         => __('Industry Type'),
+                'type'          => 'text',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'description'   => __('Eg. Retail, Entertainment etc.', $this->id),
+            ),
+            'environment' => array(
+                'title'         => __('Environment'), $this->id,
+                'type'          => 'select',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'options'       => array("0" => "Staging", "1" => "Production"),
+                'description'   => __('Select environment.', $this->id),
+                'default'       => '0'
+            ),
+            'iswebhook' => array(
+                'title' => __('Enable Webhook', $this->id),
+                'type' => 'checkbox',
+                'description' =>  "<span>$webhookUrl</span><br/><br/>Instructions and guide to <a href='https://developer.paytm.com/docs/payment-status/' target='_blank'>Paytm webhooks</a>",
+                'label' => __('Enable Paytm Webhook <a href="https://dashboard.paytm.com/next/webhook-url" target="_blank">here</a> with the URL listed below.', $this->id),
+                'default' => 'no'
+            ),
+        );
+    }
 	
 	
 	/**
@@ -357,8 +371,22 @@ class WC_paytm extends WC_Payment_Gateway {
 	 **/
 	public function check_paytm_response(){
 		global $woocommerce;
-		
 		if(!empty($_POST['STATUS'])){
+
+			//check order status before executing webhook call
+			if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
+				$getOrderId = !empty($_POST['ORDERID'])? PaytmHelper::getOrderId($_POST['ORDERID']) : 0;
+				if ( version_compare( WOOCOMMERCE_VERSION, '2.0.0', '>=' ) ) {
+					$orderCheck = new WC_Order($getOrderId);
+				} else {
+					$orderCheck = new woocommerce_order($getOrderId);
+				}
+
+				if($orderCheck->status == "processing" || $orderCheck->status == "completed"){
+					exit;
+				}
+			}
+			//end webhook check
 			
 			if(!empty($_POST['CHECKSUMHASH'])){
 				$post_checksum = $_POST['CHECKSUMHASH'];
@@ -367,8 +395,8 @@ class WC_paytm extends WC_Payment_Gateway {
 				$post_checksum = "";
 			}
 			$order = array();
-			$isValidChecksum = PaytmChecksum::verifySignature($_POST, $this->getSetting('merchant_key'), $post_checksum);
 
+			$isValidChecksum = PaytmChecksum::verifySignature($_POST, $this->getSetting('merchant_key'), $post_checksum);
 			if($isValidChecksum === true)
 			{
 				$order_id = !empty($_POST['ORDERID'])? PaytmHelper::getOrderId($_POST['ORDERID']) : 0;
@@ -474,7 +502,12 @@ class WC_paytm extends WC_Payment_Gateway {
 				);
 			} */
 			
-			wp_redirect( $redirect_url );
+			if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
+				 echo "Webhook Received";
+			}else{
+				wp_redirect( $redirect_url );
+			}
+			
 			exit;
 			}
 	}
