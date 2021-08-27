@@ -36,8 +36,6 @@ class WC_paytm extends WC_Payment_Gateway {
 			add_action( 'woocommerce_update_options_payment_gateways', array( &$this, 'process_admin_options' ) );
 		}
 		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
-
-		add_action( 'after_plugin_row_' . plugin_basename( $this->file ), array( $this, 'ppec_upgrade_notice' ), 10, 3 );
 		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/css/admin/paytm-payments.css', array(), '', '');
 	}
 	
