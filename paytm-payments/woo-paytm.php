@@ -3,7 +3,7 @@
  * Plugin Name: Paytm WooCommerce Payment Gateway
  * Plugin URI: https://github.com/Paytm-Payments/
  * Description: This plugin allow you to accept payments using Paytm. This plugin will add a Paytm Payment option on WooCommerce checkout page, when user choses Paytm as Payment Method, he will redirected to Paytm website to complete his transaction and on completion his payment, paytm will send that user back to your website along with transactions details. This plugin uses server-to-server verification to add additional security layer for validating transactions. Admin can also see payment status for orders by navigating to WooCommerce > Orders from menu in admin.
- * Version: 2.6.2
+ * Version: 2.6.3
  * Author: Paytm
  * Author URI: https://developer.paytm.com/
  * Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
