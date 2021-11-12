@@ -122,7 +122,6 @@ class WC_paytm extends WC_Payment_Gateway {
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
-                //'description'   => __('Select environment.', $this->id),
                 'default'       => '0'
             ),
             'bankOffer' => array(
@@ -130,7 +129,6 @@ class WC_paytm extends WC_Payment_Gateway {
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
-                //'description'   => __('Select environment.', $this->id),
                 'default'       => '0'
             ),
             'dcEmi' => array(
