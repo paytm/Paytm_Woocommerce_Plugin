@@ -4,7 +4,7 @@ Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Payt
 Requires PHP: 5.6
 Requires at least: 4.0.1
 Tested up to: 5.8
-Stable tag: 2.6.2
+Stable tag: 2.6.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 

@@ -117,6 +117,30 @@ class WC_paytm extends WC_Payment_Gateway {
                 'label' => __('Enable Paytm Webhook <a href="https://dashboard.paytm.com/next/webhook-url" target="_blank">here</a> with the URL listed below.', $this->id),
                 'default' => 'no'
             ),
+            'emiSubvention' => array(
+                'title'         => __('Enable EMI Subvention'), $this->id,
+                'type'          => 'select',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'options'       => array("0" => "No", "1" => "Yes"),
+                //'description'   => __('Select environment.', $this->id),
+                'default'       => '0'
+            ),
+            'bankOffer' => array(
+                'title'         => __('Enable Bank Offers'), $this->id,
+                'type'          => 'select',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'options'       => array("0" => "No", "1" => "Yes"),
+                //'description'   => __('Select environment.', $this->id),
+                'default'       => '0'
+            ),
+            'dcEmi' => array(
+                'title'         => __('Enable DC EMI'), $this->id,
+                'type'          => 'select',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'options'       => array("0" => "No", "1" => "Yes"),
+                'description'   => __('*For DC EMI Mobile Number Field is Mandatory.', $this->id),
+                'default'       => '0'
+            ),
         );
     }
 	
@@ -222,7 +246,22 @@ class WC_paytm extends WC_Payment_Gateway {
 					"custId" => $paramData['cust_id'],
 				),
 			);
-			
+			// for bank offers
+			if($this->getSetting('bankOffer') ==1){
+				$paytmParams["body"]["simplifiedPaymentOffers"]["applyAvailablePromo"]= true;
+			}
+			// for emi subvention
+			if($this->getSetting('emiSubvention') ==1){
+				$paytmParams["body"]["simplifiedSubvention"]["customerId"]= $paramData['cust_id'];
+				$paytmParams["body"]["simplifiedSubvention"]["subventionAmount"]= $paramData['amount'];
+				$paytmParams["body"]["simplifiedSubvention"]["selectPlanOnCashierPage"]= true;
+				$paytmParams["body"]["simplifiedSubvention"]["offerDetails"]["offerId"]= 1;
+			}
+			// for DC EMI
+			if($this->getSetting('dcEmi') ==1){
+				$paytmParams["body"]["userInfo"]["mobile"]= $paramData['cust_mob_no'];
+				
+			}
 			$checksum = PaytmChecksum::generateSignature(json_encode($paytmParams["body"], JSON_UNESCAPED_SLASHES), $this->getSetting('merchant_key')); 
 			
 			$paytmParams["head"] = array(
@@ -267,12 +306,18 @@ class WC_paytm extends WC_Payment_Gateway {
 		}else{
 			$cust_id = "CUST_".$order_id;
 		}
+		//get mobile no if there for DC_EMI
+		if(isset($getOrderInfo['contact']) && !empty($getOrderInfo['contact'])){
+			$cust_mob_no = $getOrderInfo['contact'];
+		}else{
+			$cust_mob_no = "";
+		}
 		$settings = get_option( "woocommerce_paytm_settings" );
 		$checkout_url         = str_replace('MID',$settings['merchant_id'], PaytmHelper::getPaytmURL(PaytmConstants::CHECKOUT_JS_URL, $settings['environment']));
 		   echo '';
 		   
 		$wait_msg='<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" onload="invokeBlinkCheckoutPopup();"></script><div id="paytm-pg-spinner" class="paytm-woopg-loader"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div><div class="bounce4"></div><div class="bounce5"></div><p class="loading-paytm">Loading Paytm...</p></div><div class="paytm-overlay paytm-woopg-loader"></div><div class="paytm-action-btn"><a href="" class="refresh-payment re-invoke">Pay Now</a><a href="'.wc_get_checkout_url().'" class="refresh-payment">Cancel</a></div>';
-		$paramData = array('amount' => $getOrderInfo['amount'], 'order_id' => $order_id, 'cust_id' => $cust_id);
+		$paramData = array('amount' => $getOrderInfo['amount'], 'order_id' => $order_id, 'cust_id' => $cust_id,'cust_mob_no' => $cust_mob_no);
 		$data= $this->blinkCheckoutSend($paramData);
 		
 			return '<script type="text/javascript">
