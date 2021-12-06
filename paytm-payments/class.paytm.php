@@ -82,38 +82,38 @@ class WC_paytm extends WC_Payment_Gateway {
                 'title'         => __('Merchant ID'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
-                'description'   => __('Enter your Merchant ID provided by Paytm', $this->id)
+                'description'   => __('Based on the selected Environment Mode, copy the relevant Merchant ID for test or production environment available on <a href="https://dashboard.paytm.com/next/apikeys" target="_blank">Paytm dashboard</a>.', $this->id),
             ),
             'merchant_key' => array(
                 'title'         => __('Merchant Key'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
-                'description'   => __('Enter your Merchant Key provided by Paytm', $this->id),
+                'description'   => __('Based on the selected Environment Mode, copy the Merchant Key for test or production environment available on <a href="https://dashboard.paytm.com/next/apikeys" target="_blank">Paytm dashboard</a>.', $this->id),
             ),
             'website' => array(
                 'title'         => __('Website Name'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
-                'description'   => __('Enter your Website Name provded by Paytm', $this->id),
+                'description'   => __('Enter "WEBSTAGING" for test/integration environment & "DEFAULT" for production environment.', $this->id),
             ),
             'industry_type' => array(
                 'title'         => __('Industry Type'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
-                'description'   => __('Eg. Retail, Entertainment etc.', $this->id),
+                'description'   => __('Login to <a href="https://dashboard.paytm.com/next/apikeys" target="_blank">Paytm dashboard</a> & copy paste the industry type available there.', $this->id),
             ),
             'environment' => array(
                 'title'         => __('Environment'), $this->id,
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "Staging", "1" => "Production"),
-                'description'   => __('Select environment.', $this->id),
+                'description'   => __('Select "Staging" for test/integration environment & "Production" once you move to production environment.', $this->id),
                 'default'       => '0'
             ),
             'iswebhook' => array(
                 'title' => __('Enable Webhook', $this->id),
                 'type' => 'checkbox',
-                'description' =>  "<span>$webhookUrl</span><br/><br/>Instructions and guide to <a href='https://developer.paytm.com/docs/payment-status/' target='_blank'>Paytm webhooks</a>",
+                'description' =>  "<span style='color:#00b9f5'>$webhookUrl</span><br/><br/>Instructions and guide to <a href='https://developer.paytm.com/docs/payment-status/' target='_blank'>Paytm webhooks</a>",
                 'label' => __('Enable Paytm Webhook <a href="https://dashboard.paytm.com/next/webhook-url" target="_blank">here</a> with the URL listed below.', $this->id),
                 'default' => 'no'
             ),
@@ -122,14 +122,16 @@ class WC_paytm extends WC_Payment_Gateway {
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
-                'default'       => '0'
+                'default'       => '0',
+                'description' => 'Get your EMI Subvention plans configured at Paytm & then Select "Yes" to offer EMI Subvention to your customers.'
             ),
             'bankOffer' => array(
                 'title'         => __('Enable Bank Offers'), $this->id,
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
-                'default'       => '0'
+                'default'       => '0',
+                'description'=> 'Get your Bank Offer plans configured at Paytm & then Select "Yes" to provide Bank Offer to your customers.'
             ),
             'dcEmi' => array(
                 'title'         => __('Enable DC EMI'), $this->id,
@@ -137,7 +139,8 @@ class WC_paytm extends WC_Payment_Gateway {
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
                 'description'   => __('*For DC EMI Mobile Number Field is Mandatory.', $this->id),
-                'default'       => '0'
+                'default'       => '0',
+                'description' => 'Get DC EMI enabled for your MID and then select "Yes" to offer DC EMI to your customer. Customer mobile number is mandatory for DC EMI.'
             ),
         );
     }
