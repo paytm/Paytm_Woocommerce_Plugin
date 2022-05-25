@@ -12,7 +12,13 @@ class WC_paytm extends WC_Payment_Gateway {
 		$this->id 							= PaytmConstants::ID;
 		$this->method_title 				= PaytmConstants::METHOD_TITLE;
 		$this->method_description 			= PaytmConstants::METHOD_DESCRIPTION;
-		$this->icon 						= plugins_url('images/paytm_logo.png' , __FILE__);
+		$getPaytmSetting = get_option('woocommerce_paytm_settings');
+		$invertLogo = $getPaytmSetting['invertLogo'];
+		if($invertLogo == 1){
+			$this->icon 					= "https://raw.githubusercontent.com/paytm/Paytm_Magento_Plugin/master/paytm_logo_invert.svg";
+		}else{
+			$this->icon 					= "https://raw.githubusercontent.com/paytm/Paytm_Magento_Plugin/master/paytm_logo_paymodes.svg";
+		}
 		$this->has_fields 					= false;
 
 		$this->init_form_fields();
@@ -37,6 +43,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		}
 		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/css/admin/paytm-payments.css', array(), '', '');
+		wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), null, true);
 	}
 	
 	
@@ -60,12 +67,6 @@ class WC_paytm extends WC_Payment_Gateway {
         $checkout_page_id = (int) $checkout_page_id > 0 ? $checkout_page_id : 7;
         $webhookUrl = get_site_url() . '/?wc-api=WC_paytm&webhook=yes';
         $this->form_fields = array(
-            'enabled'           => array(
-                'title'             => __('Enable/Disable', $this->id),
-                'type'          => 'checkbox',
-                'label'         => __('Enable Paytm Payments.', $this->id),
-                'default'       => 'no'
-            ),
             'title' => array(
                 'title'         => __('Title', $this->id),
                 'type'          => 'text',
@@ -78,14 +79,22 @@ class WC_paytm extends WC_Payment_Gateway {
                 'description'   => __('This controls the description which the user sees during checkout.', $this->id),
                 'default'       => __(PaytmConstants::DESCRIPTION, $this->id)
             ),
+            'environment' => array(
+                'title'         => __('Environment'), $this->id,
+                'type'          => 'select',
+                'custom_attributes' => array( 'required' => 'required' ),
+                'options'       => array("0" => "Test/Staging", "1" => "Production"),
+                'description'   => __('Select "Test/Staging" to setup test transactions & "Production" once you are ready to go live', $this->id),
+                'default'       => '0'
+            ),
             'merchant_id'=> array(
-                'title'         => __('Merchant ID'),
+                'title'         => __('Test/Production MID'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'description'   => __('Based on the selected Environment Mode, copy the relevant Merchant ID for test or production environment available on <a href="https://dashboard.paytm.com/next/apikeys" target="_blank">Paytm dashboard</a>.', $this->id),
             ),
             'merchant_key' => array(
-                'title'         => __('Merchant Key'),
+                'title'         => __('Test/Production Secret Key'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'description'   => __('Based on the selected Environment Mode, copy the Merchant Key for test or production environment available on <a href="https://dashboard.paytm.com/next/apikeys" target="_blank">Paytm dashboard</a>.', $this->id),
@@ -96,25 +105,11 @@ class WC_paytm extends WC_Payment_Gateway {
                 'custom_attributes' => array( 'required' => 'required' ),
                 'description'   => __('Enter "WEBSTAGING" for test/integration environment & "DEFAULT" for production environment.', $this->id),
             ),
-            'industry_type' => array(
-                'title'         => __('Industry Type'),
-                'type'          => 'text',
-                'custom_attributes' => array( 'required' => 'required' ),
-                'description'   => __('Login to <a href="https://dashboard.paytm.com/next/apikeys" target="_blank">Paytm dashboard</a> & copy paste the industry type available there.', $this->id),
-            ),
-            'environment' => array(
-                'title'         => __('Environment'), $this->id,
-                'type'          => 'select',
-                'custom_attributes' => array( 'required' => 'required' ),
-                'options'       => array("0" => "Staging", "1" => "Production"),
-                'description'   => __('Select "Staging" for test/integration environment & "Production" once you move to production environment.', $this->id),
-                'default'       => '0'
-            ),
-            'iswebhook' => array(
+             'iswebhook' => array(
                 'title' => __('Enable Webhook', $this->id),
                 'type' => 'checkbox',
-                'description' =>  "<span style='color:#00b9f5'>$webhookUrl</span><br/><br/>Instructions and guide to <a href='https://developer.paytm.com/docs/payment-status/' target='_blank'>Paytm webhooks</a>",
-                'label' => __('Enable Paytm Webhook <a href="https://dashboard.paytm.com/next/webhook-url" target="_blank">here</a> with the URL listed below.', $this->id),
+                'description' =>  "<span class='webhookTrigger'></span><span style='color:#00b9f5' class='webhook-url'>$webhookUrl</span><br/><br/>To know more about Webhooks please click  <a href='https://developer.paytm.com/docs/payment-status/' target='_blank'>here </a><br/><br/><span class='webhook-message'></span>" ,
+                'label' => __('Please check this box to enable Paytm Webhook with the URL listed below.', $this->id),
                 'default' => 'no'
             ),
             'emiSubvention' => array(
@@ -123,7 +118,7 @@ class WC_paytm extends WC_Payment_Gateway {
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
                 'default'       => '0',
-                'description' => 'Get your EMI Subvention plans configured at Paytm & then Select "Yes" to offer EMI Subvention to your customers.'
+                'description' => 'Get your EMI Subvention plans configured at <a href="https://business.paytm.com/contact-us#developer" target="_blank">Paytm</a> & then Select "Yes" to offer EMI Subvention to your customers.'
             ),
             'bankOffer' => array(
                 'title'         => __('Enable Bank Offers'), $this->id,
@@ -131,7 +126,7 @@ class WC_paytm extends WC_Payment_Gateway {
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
                 'default'       => '0',
-                'description'=> 'Get your Bank Offer plans configured at Paytm & then Select "Yes" to provide Bank Offer to your customers.'
+                'description'=> 'Get your Bank Offer plans configured at <a href="https://business.paytm.com/contact-us#developer" target="_blank">Paytm</a> & then Select "Yes" to provide Bank Offer to your customers.'
             ),
             'dcEmi' => array(
                 'title'         => __('Enable DC EMI'), $this->id,
@@ -142,6 +137,20 @@ class WC_paytm extends WC_Payment_Gateway {
                 'default'       => '0',
                 'description' => 'Get DC EMI enabled for your MID and then select "Yes" to offer DC EMI to your customer. Customer mobile number is mandatory for DC EMI.'
             ),
+            'invertLogo' => array(
+                'title'         => __('Enable Invert Logo'), $this->id,
+                'type'          => 'select',
+                'options'       => array("0" => "No", "1" => "Yes"),
+                'default'       => '0',
+                'description' => 'Paytm PG logo colour can be changed on your WooCommerce Checkout Page.'
+            ),
+            'enabled'           => array(
+                'title'             => __('Enable/Disable', $this->id),
+                'type'          => 'checkbox',
+                'label'         => __('Enable Paytm Payments.', $this->id),
+                'default'       => 'no'
+            ),
+            
         );
     }
 	
@@ -618,3 +627,70 @@ class WC_paytm extends WC_Payment_Gateway {
 	* End paytm Essential Functions
 	**/
 }
+add_action('wp_ajax_setPaymentNotificationUrl','setPaymentNotificationUrl');
+
+	function setPaymentNotificationUrl(){
+		if($_POST['environment'] == 0){
+			$url = PaytmConstants::WEBHOOK_STAGING_URL;
+			$clientId = PaytmConstants::WEBHOOK_STAGING_CLIENTID;
+			$key = base64_decode(PaytmConstants::WEBHOOK_STAGING_KEY);
+		}else{
+			$url = PaytmConstants::WEBHOOK_PRODUCTION_URL;
+			$clientId = PaytmConstants::WEBHOOK_PRODUCTION_CLIENTID;
+			$key = base64_decode(PaytmConstants::WEBHOOK_PRODUCTION_KEY);
+		}
+		$environment = $_POST['environment'];
+		$jwtToken = PaytmHelper::createJWTToken($key,$clientId,$environment);
+		$mid = $_POST['mid'];
+		if($_POST['is_webhook']==1){
+			$webhookUrl = $_POST['webhookUrl'];
+		}else{
+			$webhookUrl = "https://www.dummyUrl.com"; //set this when unchecked
+		}
+
+		$curl = curl_init();
+
+		curl_setopt_array($curl, array(
+		  CURLOPT_URL => $url.'api/v1/merchant/putMerchantInfo', 
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'PUT',
+		  CURLOPT_POSTFIELDS =>'{
+				"mid": "'.$mid.'",
+				"queryParam": "notificationUrls",
+				"paymentNotificationUrl": "'.$webhookUrl.'"
+				}',
+		  CURLOPT_HTTPHEADER => array(
+		    'x-client-token: '.$jwtToken.'',
+		    'Content-Type: application/json',
+		    'x-client-id: '.$clientId.''
+		  ),
+		));
+
+		$response = curl_exec($curl);
+		
+		$res = json_decode($response);
+		if(isset($res->success)){
+			$message = true;
+			$success = $response;
+			$showMsg = false;
+		}
+		elseif(isset($res->E_400)){
+			$message = "Your webhook has already been configured";
+			$success = $response;
+			$showMsg = false;
+		}
+		else{
+			$success = $response;
+			//$message = "Something went wrong. Please click <a href='https://dashboard.paytm.com/next/webhook-url' target='_blank'>here</a> to enable the Webhook.";
+			$message = "Something went wrong while configuring webhook. Please login to configure.";
+			$showMsg = true;
+		}
+		echo json_encode(array('message'=> $message,'response'=>$response,'showMsg'=>$showMsg));
+
+		die();
+	}

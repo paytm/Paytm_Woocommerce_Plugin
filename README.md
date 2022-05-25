@@ -1,2 +1,2 @@
 # Paytm plugin for WooCommerce
-* Developer Docs: https://developer.paytm.com/docs/woocommerce/
+* Developer Docs: https://bussiness.paytm.com/docs/woocommerce/

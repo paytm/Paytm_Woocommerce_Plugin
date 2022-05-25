@@ -1,1 +1,2 @@
-#woocommerce_paytm_iswebhook{display: none;}
+/*#woocommerce_paytm_iswebhook{display: none;}*/
+.webhookTrigger{display:none;}

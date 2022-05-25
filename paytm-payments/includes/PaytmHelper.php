@@ -82,6 +82,38 @@ class PaytmHelper{
         return $responseParamList;
     }
 
+    public static function createJWTToken($key,$clientId,$environment){
+		
+		// Create token header as a JSON string
+		$header = json_encode(['alg' => 'HS512','typ' => 'JWT']);
+
+		// Create token payload as a JSON string
+		//$time = time()- (1* 60);
+		if($environment == 0){
+			$time = time()- (33);
+		}else{
+			$time = time();
+		}
+		$payload = json_encode(['client-id' => $clientId,'iat'=>$time]);
+
+		// Encode Header to Base64Url String
+		$base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
+
+		// Encode Payload to Base64Url String
+		$base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+
+		// Create Signature Hash
+		$signature = hash_hmac('SHA512', $base64UrlHeader . "." . $base64UrlPayload, $key, true);
+
+		// Encode Signature to Base64Url String
+		$base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+
+		// Create JWT
+		$jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+
+		return $jwt;
+	}
+
 }
 endif;
 ?>

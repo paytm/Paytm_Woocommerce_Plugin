@@ -96,3 +96,10 @@
     text-decoration: none;
 }
 .paytm-action-btn{display: block;padding: 25px;}
+
+/*.wc_payment_method label img {max-width: 100% !important;width: 350px !important;}
+*/
+label[for=payment_method_paytm] img
+{
+    max-width: 350px !important;
+}
