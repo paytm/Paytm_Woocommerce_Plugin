@@ -13,7 +13,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		$this->method_title 				= PaytmConstants::METHOD_TITLE;
 		$this->method_description 			= PaytmConstants::METHOD_DESCRIPTION;
 		$getPaytmSetting = get_option('woocommerce_paytm_settings');
-		$invertLogo = $getPaytmSetting['invertLogo'];
+		$invertLogo = isset($getPaytmSetting['invertLogo'])?$getPaytmSetting['invertLogo']:"0";
 		if($invertLogo == 1){
 			$this->icon 					= "https://raw.githubusercontent.com/paytm/Paytm_Magento_Plugin/master/paytm_logo_invert.svg";
 		}else{
@@ -24,7 +24,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		$this->init_form_fields();
 		$this->init_settings();
 
-		$this->title 						= $this->getSetting('title');
+		//$this->title 						= $this->getSetting('title');
 		$this->description 					= $this->getSetting('description');
 
 		$this->msg = array('message' => '', 'class' => '');

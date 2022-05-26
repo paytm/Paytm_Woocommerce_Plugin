@@ -89,6 +89,7 @@ class PaytmHelper{
 
 		// Create token payload as a JSON string
 		//$time = time()- (1* 60);
+		date_default_timezone_set("Asia/Kolkata");	
 		if($environment == 0){
 			$time = time()- (33);
 		}else{
