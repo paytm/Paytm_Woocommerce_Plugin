@@ -448,7 +448,6 @@ class WC_paytm extends WC_Payment_Gateway {
 				$post_checksum = "";
 			}
 			$order = array();
-
 			$isValidChecksum = PaytmChecksum::verifySignature($_POST, $this->getSetting('merchant_key'), $post_checksum);
 			if($isValidChecksum === true)
 			{
@@ -467,7 +466,11 @@ class WC_paytm extends WC_Payment_Gateway {
 				} else {
 					$order = new woocommerce_order($order_id);
 				}
-
+				if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
+					$through = "webhook";
+				}else{
+					$through = "callback";
+				}
 				if(!empty($order)){
 
 						$reqParams = array(
@@ -512,7 +515,7 @@ class WC_paytm extends WC_Payment_Gateway {
 										$order->reduce_order_stock();
 
 										$message = "<br/>".sprintf(__(PaytmConstants::TRANSACTION_ID),$resParams['TXNID'])."<br/>".sprintf(__(PaytmConstants::PAYTM_ORDER_ID),$resParams['ORDERID']);
-
+										$message .= '<br/><span class="msg-by-paytm">By: Paytm '.$through.'</span>';
 										$order->add_order_note($this->msg['message'] . $message);
 										$woocommerce->cart->empty_cart();
 									}
@@ -522,12 +525,14 @@ class WC_paytm extends WC_Payment_Gateway {
 								if(!empty($responseDescription)){
 									$message .= sprintf(__(PaytmConstants::REASON),$responseDescription);
 								}
+								$message .= '<br/><span class="msg-by-paytm">By: Paytm '.$through.'</span>';
 								$this->setStatusMessage($order, $message, 'pending');
 							}else{
 								$message = __(PaytmConstants::ERROR_ORDER_MESSAGE);
 								if(!empty($responseDescription)){
 									$message .= sprintf(__(PaytmConstants::REASON),$responseDescription);
 								}
+								$message .= '<br/><span class="msg-by-paytm">By: Paytm '.$through.'</span>';
 								$this->setStatusMessage($order, $message);
 							}
 						}
