@@ -5,12 +5,23 @@
         //document.getElementById("woocommerce_paytm_iswebhook").disabled= true;
         document.getElementById('woocommerce_paytm_iswebhook').title = 'Webhook function will not work for localhost';
     }
-
+    var websiteName = jQuery("#woocommerce_paytm_otherWebsiteName").val();
+    if(websiteName!=""){
+        document.getElementById("woocommerce_paytm_otherWebsiteName").style.display = 'block';
+    }
     jQuery('#woocommerce_paytm_iswebhook').change(function() {
         jQuery('.webhookTrigger').text(1);
 
     });
     jQuery('.woocommerce-save-button').click(function(e) {
+        websiteNameValiation(false);
+        var websiteName = jQuery('#woocommerce_paytm_website').val();
+        if(websiteName == "OTHERS"){
+            var otherWebsiiteName = jQuery("#woocommerce_paytm_otherWebsiteName").val();
+            if(otherWebsiiteName == ""){
+                websiteNameValiation(true);
+            }
+        }
         var webhookTrigger = jQuery('.webhookTrigger').text();
         if(webhookTrigger ==1){
             var is_webhook = ''; 
@@ -77,5 +88,56 @@
             }    
         }
     });
- 
+
+    jQuery('#woocommerce_paytm_website').change(function() {
+        websiteNameValiation(false);
+        var data = jQuery('#woocommerce_paytm_website').val();
+        if(data == "OTHERS"){
+            document.getElementById("woocommerce_paytm_otherWebsiteName").style.display = 'block';
+            document.getElementById("woocommerce_paytm_otherWebsiteName").setAttribute("placeholder", "Enter website name");
+
+
+        }else{
+            document.getElementById("woocommerce_paytm_otherWebsiteName").style.display = 'none';
+            jQuery('#woocommerce_paytm_otherWebsiteName').val("");
+        }
+    });
+
+    jQuery("#woocommerce_paytm_otherWebsiteName").on("keyup", function(event) {
+        var value =jQuery("#woocommerce_paytm_otherWebsiteName").val();
+        var check = isAlphaNumeric(value);
+        
+        if(!check){
+            websiteNameValiation(true);
+        }else{
+           websiteNameValiation(false);
+
+        }
+    });
+    
+    function websiteNameValiation(showMessage = false){
+        if(showMessage){
+            //jQuery(".otherWebsiteName-error-message").text("Please enter a valid website name");
+            jQuery(".otherWebsiteName-error-message").html("Please enter a valid website name provided by <a href='https://dashboard.paytm.com' target='_blank'>Paytm</a>");
+            jQuery('.woocommerce-save-button').prop('disabled', true);
+            document.getElementById('woocommerce_paytm_website').scrollIntoView(true);
+
+        }else{
+            jQuery(".otherWebsiteName-error-message").text("");
+            jQuery('.woocommerce-save-button').prop('disabled', false);
+        }
+    }
+    function isAlphaNumeric(str) {
+      var code, i, len;
+      for (i = 0, len = str.length; i < len; i++) {
+        code = str.charCodeAt(i);
+        if (!(code > 47 && code < 58) && // numeric (0-9)
+            !(code > 64 && code < 91) && // upper alpha (A-Z)
+            !(code > 96 && code < 123)) { // lower alpha (a-z)
+          return false;
+        }
+      }
+      return true;
+    };
+
 })();

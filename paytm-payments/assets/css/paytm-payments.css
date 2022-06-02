@@ -102,4 +102,6 @@
 label[for=payment_method_paytm] img
 {
     max-width: 350px !important;
+    width: 100%;
+    display: block !important;
 }

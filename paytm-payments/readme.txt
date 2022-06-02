@@ -4,13 +4,13 @@ Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Payt
 Requires PHP: 5.6
 Requires at least: 4.0.1
 Tested up to: 6.0
-Stable tag: 2.6.5
+Stable tag: 2.6.8
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
 
-This is the official Paytm payment gateway plugin for WooCommerce. With this plugin you can enable India’s most widely-used checkout on your WooCommerce store. Get access to over 100+ payment sources and accept payments via Debit Card, Credit Card, Net Banking, UPI, International payments, EMI, Paytm wallet and Paytm Postpaid. This plugin enables hassle-free integration and works across all browsers and is compatible with the latest version of WooCommerce.
+Welcome to the official Paytm Payment Gateway plugin for Woocommerce. Paytm Payment Gateway is ideal for Woocommerce and Wordpress merchants since it allows them to give their customers a seamless, super-fast checkout experience backed by cutting-edge payments technology that powers India’s largest payments platform. Accept payments from over 100+ payment sources including credit cards, debit cards, netbanking from 50+ banks (including HDFC & SBI), UPI, wallets and Buy-now-pay-later options. Here are a few reasons why Woocommerce merchants should choose Paytm Payment Gateway.  
 
 == Compatibilities and Dependencies ==
 
@@ -21,18 +21,18 @@ This is the official Paytm payment gateway plugin for WooCommerce. With this plu
 
 == Features ==
 
-* Unparalleled UX and success-rates leverage a vast user-base with 250mn+ saved cards and 100mn+ saved bank accounts 
-* Wide range of payment sources - Let users choose from 100+ payment sources across - Cards, Net-banking, UPI, EMI, Paytm Wallet, Paytm Postpaid, Gift vouchers etc.
-* Enable International payments acceptance with support for over 200+ countries
-* Control the experience - Customize the payment page experience in line with your brand guidelines
-* Most Robust UPI rails - Accept payments through any UPI app with Paytm Payments Bank’s in-house UPI gateways
-* Settlements - Get complete control over your settlement schedule with options for real-time/on-demand settlements
-* Instant Refunds - Trigger instant refunds straight to the user’s account through the Paytm dashboard
-* Bank offers - Configure bank offers on cards/netbanking on the Paytm dashboad
-* Checkout Analytics - Get rich data-insights on the Paytm dashboard
-
+* Largest scale:  Preferred by 330M+ consumers in India.
+* India’s most reliable PG: Trusted by India’s biggest online brands such as Uber, Flipkart, Zomato, Airtel, IRCTC, LIC and many more.  
+* Industry best prices guaranteed: 2x more affordable than other payment gateways with 0% transaction fees on UPI & Rupay payments.
+* Boost  conversions: Affordability options like EMI and Paytm Postpaid to boost conversions.
+* Superior technology: Industry best success rates & 99.99% Up-time, Capable of supporting 3x more transactions per second than other payment gateways.
+* Superfast next day settlements, even on holidays and weekends.
+* Powerful dashboard: Get payment analytics at your fingerprints. Get insights by payment source and customer cohorts.
+* Instant refunds: Initiate refunds seamlessly with just a click right from your Paytm for business dashboard. 
 
 == Getting Started == 
+
+New to PaytmPG? Use this [link](https://dashboard.paytm.com) to create your Paytm for Business account and get access to exciting offers.
 
 Before enabling the Paytm Payment Gateway on Woocommerce, make sure you have a registered business account with Paytm. Please visit - 
 [Paytm Dashboard](https://dashboard.paytm.com) to sign-up

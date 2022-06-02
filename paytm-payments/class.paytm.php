@@ -44,8 +44,11 @@ class WC_paytm extends WC_Payment_Gateway {
 		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
 		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/css/admin/paytm-payments.css', array(), time(), '');
 
-		wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), null, true);
+		//wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), time(), true);
+		
+	
 	}
+	
 	
 	
 	private function getSetting($key)
@@ -64,16 +67,43 @@ class WC_paytm extends WC_Payment_Gateway {
 	}
 
 	public function init_form_fields(){
+
+		/* Code to Handle Website Name Data Start */
+	    $isWebsiteAdded= get_option('isWebsiteAdded');
+		$getPaytmSetting = get_option('woocommerce_paytm_settings');
+		$website = $getPaytmSetting['website'];
+		$websiteOption=array('WEBSTAGING'=>'WEBSTAGING','DEFAULT'=>'DEFAULT');
+
+		if($isWebsiteAdded=="")
+		{
+			// Old plugin Data, Need to handle previous Website Name
+			add_option("isWebsiteAdded","yes");
+			if(!in_array($website,$websiteOption) and $website!="")
+			{
+				$websiteOption[$website]=$website; 
+				 
+			}
+			$websiteOption['OTHERS'] = 'OTHERS' ;
+			add_option('websiteOption',json_encode($websiteOption));
+			
+		}
+		$websiteOptionFromDB = json_decode(get_option('websiteOption'),true) ;
+		/* else
+		{
+			// New Plugin added Nothing to handle
+		} */
+		/* Code to Handle Website Name Data Start */
+
         $checkout_page_id = get_option('woocommerce_checkout_page_id');
         $checkout_page_id = (int) $checkout_page_id > 0 ? $checkout_page_id : 7;
         $webhookUrl = get_site_url() . '/?wc-api=WC_paytm&webhook=yes';
         $this->form_fields = array(
-            'title' => array(
+            /*'title' => array(
                 'title'         => __('Title', $this->id),
                 'type'          => 'text',
                 'description'   => __('This controls the title which the user sees during checkout.', $this->id),
                 'default'       => __(PaytmConstants::TITLE, $this->id),
-            ),
+            ),*/
             'description' => array(
                 'title'         => __('Description', $this->id),
                 'type'          => 'textarea',
@@ -100,11 +130,25 @@ class WC_paytm extends WC_Payment_Gateway {
                 'custom_attributes' => array( 'required' => 'required' ),
                 'description'   => __('Based on the selected Environment Mode, copy the Merchant Key for test or production environment available on <a href="https://dashboard.paytm.com/next/apikeys" target="_blank">Paytm dashboard</a>.', $this->id),
             ),
+            // 'website' => array(
+            //     'title'         => __('Website Name'),
+            //     'type'          => 'text',
+            //     'custom_attributes' => array( 'required' => 'required' ),
+            //     'description'   => __('Enter "WEBSTAGING" for test/integration environment & "DEFAULT" for production environment.', $this->id),
+            // ),
             'website' => array(
-                'title'         => __('Website Name'),
-                'type'          => 'text',
+                'title'         => __('Website (Provided by Paytm)'), $this->id,
+                'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
-                'description'   => __('Enter "WEBSTAGING" for test/integration environment & "DEFAULT" for production environment.', $this->id),
+                'options'       => $websiteOptionFromDB,
+                'description'   => __('Enter "WEBSTAGING" for test/staging environment & "DEFAULT" for production environment.', $this->id),
+                'default'       => 'WEBSTAGING'
+            ),
+            'otherWebsiteName' => array(
+                'title'         => __('Other Website Name'),
+                'type'          => 'text',
+                //'custom_attributes' => array('placeholder' => __( 'Webiste Name', 'woocommerce' ),),
+                'description'   => __("<span class='otherWebsiteName-error-message' style='color:red'></span>", $this->id),
             ),
              'iswebhook' => array(
                 'title' => __('Enable Webhook', $this->id),
@@ -242,11 +286,17 @@ class WC_paytm extends WC_Payment_Gateway {
 		$data=array();
 		if(!empty($paramData['amount']) && (int)$paramData['amount'] > 0)
 		{
+			if($this->getSetting('otherWebsiteName') == ""){
+				$website = $this->getSetting('website');
+			}else{
+				$website = $this->getSetting('otherWebsiteName');
+			}
+			//echo $website;die;
 			/* body parameters */
 			$paytmParams["body"] = array(
 				"requestType" => "Payment",
 				"mid" => $this->getSetting('merchant_id'),
-				"websiteName" => $this->getSetting('website'),
+				"websiteName" => $website,
 				"orderId" => $paramData['order_id'],
 				"callbackUrl" => $this->getCallbackUrl(),
 				"txnAmount" => array(
@@ -281,7 +331,6 @@ class WC_paytm extends WC_Payment_Gateway {
 			
 			/* prepare JSON string for request */
 			$post_data = json_encode($paytmParams, JSON_UNESCAPED_SLASHES);
-
 			$url = PaytmHelper::getPaytmURL(PaytmConstants::INITIATE_TRANSACTION_URL, $this->getSetting('environment')) . '?mid='.$paytmParams["body"]["mid"].'&orderId='.$paytmParams["body"]["orderId"];
 			
 			$res= PaytmHelper::executecUrl($url, $paytmParams);
@@ -468,9 +517,9 @@ class WC_paytm extends WC_Payment_Gateway {
 					$order = new woocommerce_order($order_id);
 				}
 				if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
-					$through = "webhook";
+					$through = "webhook_".time();
 				}else{
-					$through = "callback";
+					$through = "callback_".time();
 				}
 				if(!empty($order)){
 
@@ -700,3 +749,8 @@ add_action('wp_ajax_setPaymentNotificationUrl','setPaymentNotificationUrl');
 
 		die();
 	}
+
+	function paytm_enqueue_script() {   
+    	wp_enqueue_script( 'paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), time(), true);
+	}
+	add_action('admin_enqueue_scripts', 'paytm_enqueue_script');
