@@ -24,7 +24,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		$this->init_form_fields();
 		$this->init_settings();
 
-		//$this->title 						= $this->getSetting('title');
+		$this->title 						= isset($getPaytmSetting['title'])?$this->getSetting('title'):"";
 		$this->description 					= $this->getSetting('description');
 
 		$this->msg = array('message' => '', 'class' => '');
@@ -42,7 +42,7 @@ class WC_paytm extends WC_Payment_Gateway {
 			add_action( 'woocommerce_update_options_payment_gateways', array( &$this, 'process_admin_options' ) );
 		}
 		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
-		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/css/admin/paytm-payments.css', array(), time(), '');
+		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/css/admin/paytm-payments.css', array(), time(), '');
 
 		//wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), time(), true);
 		
@@ -71,7 +71,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		/* Code to Handle Website Name Data Start */
 	    $isWebsiteAdded= get_option('isWebsiteAdded');
 		$getPaytmSetting = get_option('woocommerce_paytm_settings');
-		$website = $getPaytmSetting['website'];
+		$website = isset($getPaytmSetting['website'])?$getPaytmSetting['website']:"";
 		$websiteOption=array('WEBSTAGING'=>'WEBSTAGING','DEFAULT'=>'DEFAULT');
 
 		if($isWebsiteAdded=="")
@@ -193,7 +193,7 @@ class WC_paytm extends WC_Payment_Gateway {
                 'title'             => __('Enable/Disable', $this->id),
                 'type'          => 'checkbox',
                 'label'         => __('Enable Paytm Payments.', $this->id),
-                'default'       => 'no'
+                'default'       => 'yes'
             ),
             
         );
@@ -751,6 +751,6 @@ add_action('wp_ajax_setPaymentNotificationUrl','setPaymentNotificationUrl');
 	}
 
 	function paytm_enqueue_script() {   
-    	wp_enqueue_script( 'paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), time(), true);
+    	wp_enqueue_script( 'paytm-script', plugin_dir_url( __FILE__ ) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/js/admin/paytm-payments.js', array('jquery'), time(), true);
 	}
 	add_action('admin_enqueue_scripts', 'paytm_enqueue_script');

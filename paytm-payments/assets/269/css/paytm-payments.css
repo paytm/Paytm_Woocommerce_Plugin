@@ -104,4 +104,11 @@ label[for=payment_method_paytm] img
     max-width: 350px !important;
     width: 100%;
     display: block !important;
+    visibility: visible;
+}
+label[for=payment_method_paytm]{
+    visibility: hidden;
+}
+label[for=payment_method_paytm]::before{
+    visibility: visible;
 }
