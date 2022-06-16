@@ -24,7 +24,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		$this->init_form_fields();
 		$this->init_settings();
 
-		$this->title 						= isset($getPaytmSetting['title'])?$this->getSetting('title'):"";
+		$this->title 						= isset($getPaytmSetting['title'])?$this->getSetting('title'):"Paytm";
 		$this->description 					= $this->getSetting('description');
 
 		$this->msg = array('message' => '', 'class' => '');
