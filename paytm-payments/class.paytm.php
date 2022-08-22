@@ -257,7 +257,7 @@ class WC_paytm extends WC_Payment_Gateway {
 	}
 	public function getOrderInfo($order)
 	{
-		if (version_compare(WOOCOMMERCE_VERSION, '2.7.0', '>='))
+		if (version_compare(WOOCOMMERCE_VERSION, '2.7.1', '>='))
 		{
 			$data = array(
 				'name'    	=> $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
@@ -505,7 +505,7 @@ class WC_paytm extends WC_Payment_Gateway {
 
 				/* save paytm response in db */
 				if(PaytmConstants::SAVE_PAYTM_RESPONSE && !empty($_POST['STATUS'])){
-					$order_data_id = saveTxnResponse($_POST, PaytmHelper::getOrderId($_POST['ORDERID']));
+					$order_data_id = saveTxnResponse(PaytmHelper::getOrderId($_POST['ORDERID']), $_POST);
 				}
 				/* save paytm response in db */
 
@@ -545,7 +545,7 @@ class WC_paytm extends WC_Payment_Gateway {
 
 						/* save paytm response in db */
 						if(PaytmConstants::SAVE_PAYTM_RESPONSE && !empty($resParams['STATUS'])){
-							saveTxnResponse($resParams, PaytmHelper::getOrderId($resParams['ORDERID']), $order_data_id);
+							saveTxnResponse(PaytmHelper::getOrderId($resParams['ORDERID']), $order_data_id, $resParams);
 						}
 						/* save paytm response in db */
 
