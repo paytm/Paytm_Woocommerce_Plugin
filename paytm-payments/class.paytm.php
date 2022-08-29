@@ -45,7 +45,7 @@ class WC_paytm extends WC_Payment_Gateway {
 		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/css/admin/paytm-payments.css', array(), time(), '');
 
 		//wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), time(), true);
-		
+	    wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/js/paytm-payments.js', array('jquery'), time(), true);	
 	
 	}
 	
@@ -257,7 +257,7 @@ class WC_paytm extends WC_Payment_Gateway {
 	}
 	public function getOrderInfo($order)
 	{
-		if (version_compare(WOOCOMMERCE_VERSION, '2.7.1', '>='))
+		if (version_compare(WOOCOMMERCE_VERSION, '2.7.2', '>='))
 		{
 			$data = array(
 				'name'    	=> $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
