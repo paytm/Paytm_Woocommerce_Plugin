@@ -3,7 +3,7 @@
  * Plugin Name: Paytm WooCommerce Payment Gateway
  * Plugin URI: https://github.com/Paytm/
  * Description: This plugin allow you to accept payments using Paytm. This plugin will add a Paytm Payment option on WooCommerce checkout page, when user choses Paytm as Payment Method, he will redirected to Paytm website to complete his transaction and on completion his payment, paytm will send that user back to your website along with transactions details. This plugin uses server-to-server verification to add additional security layer for validating transactions. Admin can also see payment status for orders by navigating to WooCommerce > Orders from menu in admin.
- * Version: 2.7.2
+ * Version: 2.7.3
  * Author: Paytm
  * Author URI: https://business.paytm.com/payment-gateway
  * Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
@@ -74,89 +74,10 @@ function paytmWoopayment_enqueue_style() {
     wp_enqueue_style('paytmWoopayment', plugin_dir_url( __FILE__ ) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/css/paytm-payments.css', array(), time(), '');
 	// $plugin_data = get_plugin_data( __FILE__ );
 	// define('PAYTM_VERSION',$plugin_data['Version']);
-	define('PAYTM_VERSION','2.7.2');
+	//define('PAYTM_VERSION','2.7.3');
 }
 add_action('wp_head', 'paytmWoopayment_enqueue_style');
 
-
-/*
-* check cURL working or able to communicate with Paytm
-* http://www.example.com/?paytm_action=curltest
-*/
-if(isset($_GET['paytm_action']) && sanitize_text_field($_GET['paytm_action']) == "curltest"){
-	add_action('the_content', 'curltest');
-}
-
-function curltest($content){
-
-	$debug = array();
-
-	if(!function_exists("curl_init")){
-		$debug[0]["info"][] = "cURL extension is either not available or disabled. Check phpinfo for more info.";
-
-	// if curl is enable then see if outgoing URLs are blocked or not
-	} else {
-
-		// if any specific URL passed to test for
-		if(isset($_GET["url"]) && $_GET["url"] != ""){
-			$testing_urls = array(esc_url_raw($_GET["url"]));
-		
-		} else {
-
-			// this site homepage URL
-			$server = esc_url( home_url( '/' ));
-
-			$testing_urls = array(
-								$server,
-								"https://www.gstatic.com/generate_204",
-								PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 1),
-								PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 0)
-							);
-		}
-		$testing_urls = array_filter($testing_urls);
-
-		// loop over all URLs, maintain debug log for each response received
-		foreach($testing_urls as $key => $url){
-
-			$debug[$key]["info"][] = "Connecting to <b>" . $url . "</b> using cURL";
-			
-			$response = wp_remote_get($url, array('redirection' => 0));
-			
-			$http_code = wp_remote_retrieve_response_code($response);
-
-			if ( is_array( $response ) ) {
-
-				$debug[$key]["info"][] = "cURL executed succcessfully.";
-				$debug[$key]["info"][] = "HTTP Response Code: <b>". $http_code . "</b>";
-
-			} else {
-				$debug[$key]["info"][] = "Connection Failed !!";
-				$debug[$key]["info"][] = "Error: <b>" . $response->get_error_message() . "</b>";
-			}
-
-			if((!empty($_GET["url"])) || (in_array($url, array(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 1) , PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, 0))))){
-				$debug[$key]["info"][] = "Response: <br/><!----- Response Below ----->" . wp_remote_retrieve_body($response);
-			}
-		}
-	}
-
-	
-
-	$content = "<center><h1>cURL Test for Paytm WooCommerce Plugin</h1></center><hr/>";
-	foreach($debug as $k => $v){
-		$content .= "<ul>";
-		foreach($v["info"] as $info){
-			$content .= "<li>".$info."</li>";
-		}
-		$content .= "</ul>";
-		$content .= "<hr/>";
-	}
-
-	return $content;
-}
-/*
-* Code to test Curl
-*/
 
 if(PaytmConstants::SAVE_PAYTM_RESPONSE){
 	// Add a paytm payments box only for shop_order post type (order edit pages)
@@ -183,11 +104,13 @@ if(PaytmConstants::SAVE_PAYTM_RESPONSE){
 		$table_html .= '<div class="btn-area"><img class="paytm-img-loader" src="'.admin_url('images/loading.gif').'"><button type="button" id="button-paytm-fetch-status" class="button-paytm-fetch-status button">'.__(PaytmConstants::FETCH_BUTTON).'</button></div>';
 		$paytm_data = array();
 		if(!empty($results)){  		
-				$paytm_data = json_decode($results['paytm_response'], true); 			
+				$paytm_data = json_decode($results['paytm_response'], true); 	
 				if(!empty($paytm_data)){
 					$table_html .= '<table class="paytm_payment_block" id="paytm_payment_table">';
 					foreach ($paytm_data as $key => $value) {
-						$table_html .= '<tr><td>'.$key.'</td><td>' .$value.'</td></tr>';
+						if($key!=='request'){
+							$table_html .= '<tr><td>'.$key.'</td><td>' .$value.'</td></tr>';
+						}
 					}
 					$table_html .= '</table>';
 					$table_html .= '<input type="hidden" id="paytm_order_id" name="paytm_order_id" value="'.$results['paytm_order_id'].'"><input type="hidden" id="order_data_id" name="order_data_id" value="'.$results['id'].'"><input type="hidden" id="paytm_woo_nonce" name="paytm_woo_nonce" value="'.wp_create_nonce('paytm_woo_nonce').'">';

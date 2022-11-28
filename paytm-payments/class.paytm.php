@@ -42,11 +42,14 @@ class WC_paytm extends WC_Payment_Gateway {
 			add_action( 'woocommerce_update_options_payment_gateways', array( &$this, 'process_admin_options' ) );
 		}
 		add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
+		if( is_admin() ) {
 		wp_enqueue_style('paytmadminWoopayment', plugin_dir_url( __FILE__ ) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/css/admin/paytm-payments.css', array(), time(), '');
-
+		}
 		//wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/js/admin/paytm-payments.js', array('jquery'), time(), true);
+
+		if( !is_admin() ) {
 	    wp_enqueue_script('paytm-script', plugin_dir_url( __FILE__ ) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/js/paytm-payments.js', array('jquery'), time(), true);	
-	
+		}
 	}
 	
 	
@@ -394,7 +397,7 @@ class WC_paytm extends WC_Payment_Gateway {
 					},
 					"integration": {
 						"platform": "Woocommerce",
-						"version": "'.WOOCOMMERCE_VERSION.'|'.PAYTM_VERSION.'"
+						"version": "'.WOOCOMMERCE_VERSION.'|'.PaytmConstants::PLUGIN_VERSION.'"
 					},
 					"handler": {
 					  "notifyMerchant": function(eventName,data){
