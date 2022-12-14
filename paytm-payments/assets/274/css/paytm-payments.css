@@ -107,7 +107,7 @@ label[for=payment_method_paytm] img
     visibility: visible;
 }
 label[for=payment_method_paytm]{
-    visibility: hidden;
+    visibility: visible;
 }
 label[for=payment_method_paytm]::before{
     visibility: visible;
