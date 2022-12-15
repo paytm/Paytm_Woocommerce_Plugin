@@ -4,7 +4,7 @@ Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Payt
 Requires PHP: 5.6
 Requires at least: 4.0.1
 Tested up to: 6.1.1
-Stable tag: 2.7.4
+Stable tag: 2.7.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -99,7 +99,7 @@ In case of any issues with integration, please [get in touch](https://business.p
 
 == Changelog ==
  
-= 2.7.4 =
+= 2.7.7 =
 * Compatible and tested with Woocommerce version upto 7.2.0
 * Logo issue fixed
 * Enabled title on checkout page

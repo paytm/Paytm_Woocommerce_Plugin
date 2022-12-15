@@ -101,14 +101,7 @@ if(!class_exists('PaytmHelper')) :
         {
             // Create token header as a JSON string
             $header = json_encode(['alg' => 'HS512','typ' => 'JWT']);
-            /* Create token payload as a JSON string
-            $time = time()- (1* 60); */
-            date_default_timezone_set("Asia/Kolkata");
-            /* if($environment == 0){
-             $time = time()- (33);
-             }else{
-             $time = time();
-             }*/
+            /* Create token payload as a JSON string */
             $time = time();
             $payload = json_encode(['client-id' => $clientId,'iat'=>$time]);
 

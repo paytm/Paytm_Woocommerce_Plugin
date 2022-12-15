@@ -739,7 +739,7 @@ function setPaymentNotificationUrl()
         $jwtToken = PaytmHelper::createJWTToken($key, $clientId, $environment);
         $mid = sanitize_text_field($_POST['mid']);
         if ($_POST['is_webhook']==1) {
-            $webhookUrl = $_POST['webhookUrl'];
+            $webhookUrl = sanitize_text_field($_POST['webhookUrl']);
         } else {
             $webhookUrl = esc_url("https://www.dummyUrl.com"); //set this when unchecked
         }
