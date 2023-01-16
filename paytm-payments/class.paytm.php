@@ -18,9 +18,9 @@ class WC_Paytm extends WC_Payment_Gateway
         $getPaytmSetting = get_option('woocommerce_paytm_settings');
         $invertLogo = isset($getPaytmSetting['invertLogo'])?$getPaytmSetting['invertLogo']:"0";
         if ($invertLogo == 1) {
-            $this->icon= esc_url(plugin_dir_url(__FILE__) ."assets/".PaytmConstants::PLUGIN_VERSION_FOLDER."/images/paytm_logo_invert.svg");
+            $this->icon= esc_url("https://staticpg.paytm.in/pg_plugins_logo/paytm_logo_invert.svg");
         } else {
-            $this->icon= esc_url(plugin_dir_url(__FILE__) ."assets/".PaytmConstants::PLUGIN_VERSION_FOLDER."/images/paytm_logo_paymodes.svg");
+            $this->icon= esc_url("https://staticpg.paytm.in/pg_plugins_logo/paytm_logo_paymodes.svg");
         }
         $this->has_fields= false;
 
