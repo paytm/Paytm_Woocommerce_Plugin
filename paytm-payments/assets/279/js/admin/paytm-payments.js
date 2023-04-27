@@ -26,7 +26,8 @@
         if(webhookTrigger ==1){
             var is_webhook = ''; 
             var environment  =jQuery('#woocommerce_paytm_environment').val();
-            var mid  =jQuery('#woocommerce_paytm_merchant_id').val();   
+            var mid  =jQuery('#woocommerce_paytm_merchant_id').val();
+            var mkey  =jQuery('#woocommerce_paytm_merchant_key').val();   
             var webhookUrl  =jQuery('.webhook-url').text();
             
             
@@ -51,7 +52,7 @@
             jQuery.ajax({
                 type:"POST",
                 dataType: 'json',
-                data:{is_webhook:is_webhook,mid:mid,environment:environment,webhookUrl:webhookUrl},
+                data:{is_webhook:is_webhook,mid:mid,mkey:mkey,environment:environment,webhookUrl:webhookUrl},
                 url: "admin-ajax.php?action=setPaymentNotificationUrl",
                 async:false,
                 success: function(data) {
@@ -71,7 +72,10 @@
                 },
                 complete: function() { 
                     return true;
-                 }
+                 },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert('Internal error: ' + jqXHR.responseText);
+                }                 
             });
         }
 

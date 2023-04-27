@@ -23,9 +23,9 @@ class PaytmConstants{
     CONST CONNECT_TIMEOUT= 10;
     CONST TIMEOUT= 10;
 
-    CONST LAST_UPDATED= "20230116";
-    CONST PLUGIN_VERSION= "2.7.8";
-    CONST PLUGIN_VERSION_FOLDER= "278";
+    CONST LAST_UPDATED= "20230426";
+    CONST PLUGIN_VERSION= "2.7.9";
+    CONST PLUGIN_VERSION_FOLDER= "279";
 
     CONST CUSTOM_CALLBACK_URL= "";
 
@@ -66,12 +66,7 @@ class PaytmConstants{
     CONST ERROR_CURL_WARNING= "Your server is unable to connect with us. Please contact to Paytm Support.";
 
     CONST WEBHOOK_STAGING_URL= "https://boss-stage.paytm.in/";
-    CONST WEBHOOK_STAGING_KEY               = 'DSqy6pGOhBR9CUhUFQygzlkG1+x66C6zV+M8bnGiwpEH+MvNsWmaJLirjxMVpRH+9c9XjZxse+wSYuNYmkG4uA==';
-    CONST WEBHOOK_STAGING_CLIENTID          = '54b88dbc-fdd0-4f6f-af09-4ee76e90135a';
-    
     CONST WEBHOOK_PRODUCTION_URL= "https://boss-ext.paytm.in/";
-    CONST WEBHOOK_PRODUCTION_KEY            = 'jF5tDDCJ8/bRot8X5DAGVHiC+KwW9SQuckYya12NZ2/EWVBhU7Cj45A4lOSvo797uJ4M3LB5mTjiC0nhDYKZGg==';
-    CONST WEBHOOK_PRODUCTION_CLIENTID       = 'f7484d06-f307-4e10-b661-0191f5efe031';
 
 }
 

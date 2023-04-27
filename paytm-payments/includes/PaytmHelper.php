@@ -81,7 +81,7 @@ if(!class_exists('PaytmHelper')) :
             return false;
         }
 
-        public static function executecUrl($apiURL, $requestParamList) 
+        /* public static function executecUrlOld($apiURL, $requestParamList) //not in use
         {
             $jsonResponse = wp_remote_post(
                 $apiURL, array(
@@ -95,33 +95,24 @@ if(!class_exists('PaytmHelper')) :
             $responseParamList = json_decode($response_body, true);
             $responseParamList['request'] = $requestParamList;
             return $responseParamList;
+        }*/
+
+        public static function executecUrl($apiURL, $requestParamList, $method ='POST', $extraHeaders = array()){
+            $headers = array("Content-Type"=> "application/json");
+            if (!empty($extraHeaders)) {
+                $headers = array_merge($headers, $extraHeaders);
+            }                
+            $args = array(
+                'headers' => $headers,
+                'body'      => json_encode($requestParamList, JSON_UNESCAPED_SLASHES),
+                'method'    => $method
+            );
+
+            $result =  wp_remote_request( $apiURL, $args );
+            $response_body = wp_remote_retrieve_body($result);
+            return $responseParamList['request'] = json_decode($response_body, true);
         }
 
-        public static function createJWTToken($key,$clientId,$environment)
-        {
-            // Create token header as a JSON string
-            $header = json_encode(['alg' => 'HS512','typ' => 'JWT']);
-            /* Create token payload as a JSON string */
-            $time = time();
-            $payload = json_encode(['client-id' => $clientId,'iat'=>$time]);
-
-            // Encode Header to Base64Url String
-            $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
-
-            // Encode Payload to Base64Url String
-            $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
-
-            // Create Signature Hash
-            $signature = hash_hmac('SHA512', $base64UrlHeader . "." . $base64UrlPayload, $key, true);
-
-            // Encode Signature to Base64Url String
-            $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
-
-            // Create JWT
-            $jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
-
-            return $jwt;
-        }
     }
 endif;
 ?>

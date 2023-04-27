@@ -49,13 +49,6 @@ class WC_Paytm extends WC_Payment_Gateway
                 add_action('woocommerce_update_options_payment_gateways', array( &$this, 'process_admin_options' ) );
         }
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
-        if (is_admin() ) {
-            wp_enqueue_style('paytmadminWoopayment', plugin_dir_url(__FILE__) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/css/admin/paytm-payments.css', array(), time(), '');
-        }
-
-        if (!is_admin() ) {
-            wp_enqueue_script('paytm-script', plugin_dir_url(__FILE__) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/js/paytm-payments.js', array('jquery'), time(), true);
-        }
     }
 
 
@@ -728,55 +721,31 @@ function setPaymentNotificationUrl()
 {
     if ($_POST['environment'] == 0) {
         $url = PaytmConstants::WEBHOOK_STAGING_URL;
-        $clientId = PaytmConstants::WEBHOOK_STAGING_CLIENTID;
-        $key = base64_decode(PaytmConstants::WEBHOOK_STAGING_KEY);
     } else {
         $url = PaytmConstants::WEBHOOK_PRODUCTION_URL;
-        $clientId = PaytmConstants::WEBHOOK_PRODUCTION_CLIENTID;
-        $key = base64_decode(PaytmConstants::WEBHOOK_PRODUCTION_KEY);
     }
-        $environment = sanitize_text_field($_POST['environment']);
-        $jwtToken = PaytmHelper::createJWTToken($key, $clientId, $environment);
+        $environment = sanitize_text_field($_POST['environment']);      
         $mid = sanitize_text_field($_POST['mid']);
+        $mkey = sanitize_text_field($_POST['mkey']);
         if ($_POST['is_webhook']==1) {
-            $webhookUrl = sanitize_text_field($_POST['webhookUrl']);
+           $webhookUrl = sanitize_text_field($_POST['webhookUrl']);
         } else {
             $webhookUrl = esc_url("https://www.dummyUrl.com"); //set this when unchecked
         }
-
-        $curl = curl_init();
-
-        curl_setopt_array(
-            $curl, array(
-                CURLOPT_URL => $url.'api/v1/merchant/putMerchantInfo', 
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'PUT',
-                CURLOPT_POSTFIELDS =>'{
-				    "mid": "'.$mid.'",
-				    "queryParam": "notificationUrls",
-				    "paymentNotificationUrl": "'.$webhookUrl.'"
-				}',
-                CURLOPT_HTTPHEADER => array(
-                    'x-client-token: '.$jwtToken.'',
-                    'Content-Type: application/json',
-                    'x-client-id: '.$clientId.''
-                ),
-            )
-        );
-
-        $response = curl_exec($curl);
-
-        $res = json_decode($response);
-    if (isset($res->success)) {
+        $paytmParams = array(
+            "mid"       => $mid,
+            "queryParam" => "notificationUrls",
+            "paymentNotificationUrl" => $webhookUrl
+            
+          );
+        $checksum = PaytmChecksum::generateSignature(json_encode($paytmParams, JSON_UNESCAPED_SLASHES), $mkey); 
+        $res= PaytmHelper::executecUrl($url.'api/v1/external/putMerchantInfo', $paytmParams, $method ='PUT',['x-checksum'=>$checksum]);
+   // print_r($res);
+        if (isset($res['success'])) {
         $message = true;
         $success = $response;
         $showMsg = false;
-    } elseif (isset($res->E_400)) {
+    } elseif (isset($res['E_400'])) {
         $message = "Your webhook has already been configured";
         $success = $response;
         $showMsg = false;
@@ -792,6 +761,10 @@ function setPaymentNotificationUrl()
 
 function paytm_enqueue_script() 
 {   
+        wp_enqueue_style('paytmadminWoopayment', plugin_dir_url(__FILE__) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/css/admin/paytm-payments.css', array(), time(), '');    
         wp_enqueue_script('paytm-script', plugin_dir_url(__FILE__) . 'assets/'.PaytmConstants::PLUGIN_VERSION_FOLDER.'/js/admin/paytm-payments.js', array('jquery'), time(), true);
 }
-add_action('admin_enqueue_scripts', 'paytm_enqueue_script');
+
+if (current_user_can( 'manage_options' ) && isset( $_GET['page'] ) && $_GET['page'] === 'wc-settings' ) {
+    add_action('admin_enqueue_scripts', 'paytm_enqueue_script');
+}

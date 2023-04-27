@@ -3,8 +3,8 @@ Contributors: integrationdevpaytm
 Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
 Requires PHP: 5.6
 Requires at least: 4.0.1
-Tested up to: 6.1.1
-Stable tag: 2.7.8
+Tested up to: 6.2
+Stable tag: 2.7.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -76,8 +76,7 @@ Note: In case you have installed the plugin directly from the wordpress dashboar
 	* Description - Default
 	* Merchant Identifier - Staging/Production MID provided by Paytm
 	* Secret Key - Staging/Production Key provided by Paytm
-	* Website Name - Provided by Paytm
-	* Industry Type - Provided by Paytm
+	* Website Name - Provided by Paytm 
 	* Environment - Select environment type
 
 Your Paytm payment gateway is enabled. Now you can accept payment through Paytm.
@@ -98,7 +97,12 @@ In case of any issues with integration, please [get in touch](https://business.p
 * Your Paytm Payment Gateway plugin is now setup. You can now accept payments through Paytmm.
 
 == Changelog ==
- 
+
+= 2.7.9 =
+* Compatible and tested with Woocommerce version upto 7.5.1
+* Optimize JS and CSS
+* Updated Security
+
 = 2.7.7 =
 * Compatible and tested with Woocommerce version upto 7.2.0
 * Logo issue fixed
