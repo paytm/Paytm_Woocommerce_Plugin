@@ -88,14 +88,15 @@ function paytmWoopayment_js_css(){
 add_action( 'wp_enqueue_scripts', 'paytmWoopayment_js_css' );
 
 
-if (PaytmConstants::SAVE_PAYTM_RESPONSE && isset($_GET['post'])) {
+if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
     // Add a paytm payments box only for shop_order post type (order edit pages)
     add_action('add_meta_boxes', 'add_paytm_payment_block');
     function add_paytm_payment_block()
     {
+
         global $wpdb;
         $settings = get_option("woocommerce_paytm_settings");
-        $post_id1 = sanitize_text_field($_GET['post']);
+        $post_id1 = sanitize_text_field( isset($_GET['post']) ? $_GET['post'] : '');
         $post_id = preg_replace('/[^a-zA-Z0-9]/', '', $post_id1);
         if(! $post_id ) return; // Exit
 
