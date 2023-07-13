@@ -19,7 +19,8 @@ class WC_Paytm extends WC_Payment_Gateway
         $invertLogo = isset($getPaytmSetting['invertLogo'])?$getPaytmSetting['invertLogo']:"0";
         if ($invertLogo == 1) {
             $this->icon= esc_url("https://staticpg.paytm.in/pg_plugins_logo/paytm_logo_invert.svg");
-        } else {
+        }
+        else {
             $this->icon= esc_url("https://staticpg.paytm.in/pg_plugins_logo/paytm_logo_paymodes.svg");
         }
         $this->has_fields= false;
@@ -265,6 +266,8 @@ class WC_Paytm extends WC_Payment_Gateway
 
         // Transaction URL is not working properly or not able to communicate with paytm
         if (!empty(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, $this->getSetting('environment')))) {
+            //wp_remote_get($url, array('sslverify' => FALSE));
+
             $response = (array)wp_remote_get(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, $this->getSetting('environment')));
             if (!empty($response['errors'])) {
                 echo wp_kses('<div class="paytm_response error-box">'. PaytmConstants::ERROR_CURL_WARNING .'</div>', $allowed_tags);

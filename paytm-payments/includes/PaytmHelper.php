@@ -63,6 +63,8 @@ if(!class_exists('PaytmHelper')) :
             if (!empty($transaction_status_url) && function_exists("curl_init")) {
                 $ch = curl_init(trim($transaction_status_url));
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+
                 $res = curl_exec($ch);
                 curl_close($ch);
                 return $res !== false;
@@ -105,7 +107,7 @@ if(!class_exists('PaytmHelper')) :
             $args = array(
                 'headers' => $headers,
                 'body'      => json_encode($requestParamList, JSON_UNESCAPED_SLASHES),
-                'method'    => $method
+                'method'    => $method,
             );
 
             $result =  wp_remote_request( $apiURL, $args );

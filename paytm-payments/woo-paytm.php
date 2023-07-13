@@ -3,16 +3,16 @@
  * Plugin Name: Paytm WooCommerce Payment Gateway
  * Plugin URI: https://github.com/Paytm/
  * Description: This plugin allow you to accept payments using Paytm. This plugin will add a Paytm Payment option on WooCommerce checkout page, when user choses Paytm as Payment Method, he will redirected to Paytm website to complete his transaction and on completion his payment, paytm will send that user back to your website along with transactions details. This plugin uses server-to-server verification to add additional security layer for validating transactions. Admin can also see payment status for orders by navigating to WooCommerce > Orders from menu in admin.
- * Version: 2.7.9
+ * Version: 2.8.0
  * Author: Paytm
  * Author URI: https://business.paytm.com/payment-gateway
  * Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
  * Requires at least: 4.0.1
  * Tested up to: 6.2
- * Requires PHP: 5.6
+ * Requires PHP: 7.4
  * Text Domain: Paytm Payments
  * WC requires at least: 2.0.0
- * WC tested up to: 7.5.1
+ * WC tested up to: 7.8.2
  */
 
 
@@ -24,10 +24,23 @@ if (! defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
+
+use Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController;
+
+
 require_once __DIR__.'/includes/PaytmHelper.php';
 require_once __DIR__.'/includes/PaytmChecksum.php';
 
+
+add_action( 'before_woocommerce_init', function() {
+    if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'product_block_editor', __FILE__, true );
+    }
+} );
+
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'woocommerce_paytm_add_action_links');
+
 function woocommerce_paytm_add_action_links( $links ) 
 {
     $settting_url = array(
@@ -67,8 +80,12 @@ function uninstall_paytm_plugin()
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'paytm_order_data';
-    $sql = "DROP TABLE IF EXISTS $table_name";
-    $wpdb->query($sql);
+    $query = "SELECT * FROM $table_name";
+    $results = $wpdb->get_results($query);
+    if(count($results) <= 0 ){
+        $sql = "DROP TABLE IF EXISTS $table_name";
+        $wpdb->query($sql);
+    }
     delete_option('woocommerce_paytm_settings');
 }
 function paytmWoopayment_enqueue_style() 
@@ -87,30 +104,41 @@ function paytmWoopayment_js_css(){
 
 add_action( 'wp_enqueue_scripts', 'paytmWoopayment_js_css' );
 
-
 if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
+  
     // Add a paytm payments box only for shop_order post type (order edit pages)
     add_action('add_meta_boxes', 'add_paytm_payment_block');
+
+    //Function changes for woocommerce HPOS features
     function add_paytm_payment_block()
     {
 
         global $wpdb;
         $settings = get_option("woocommerce_paytm_settings");
-        $post_id1 = sanitize_text_field( isset($_GET['post']) ? $_GET['post'] : '');
+        $post_id1 = sanitize_text_field(isset($_GET['post']) ? $_GET['post'] : '');
         $post_id = preg_replace('/[^a-zA-Z0-9]/', '', $post_id1);
-        if(! $post_id ) return; // Exit
 
+
+        if ($post_id == '' && get_option("woocommerce_custom_orders_table_enabled") == 'yes') {
+            $post_id = isset($_GET['id']) ? $_GET['id'] : '';
+        }
+
+        if(! $post_id ) return; // Exit
+        $screen = wc_get_container()->get( CustomOrdersTableController::class )->custom_orders_table_usage_is_enabled()
+        ? wc_get_page_screen_id( 'shop-order' )
+        : 'shop_order';
         $results = getPaytmOrderData($post_id);
+
         // paytm enabled and order is exists with paym_order_data
         if ($settings['enabled'] == 'yes' && !empty($results)) {
-            add_meta_box('_paytm_response_table', __('Paytm Payments'), '_paytm_response_table', 'shop_order', 'normal', 'default', array('results' => $results
+            add_meta_box('_paytm_response_table', __('Paytm Payments'), '_paytm_response_table', $screen, 'normal', 'default', array('results' => $results
                 )
             );
         }  
     }
 
     function _paytm_response_table($post = array(),$data = array())
-    {
+    { 
         //Echoing HTML safely start
         global $allowedposttags;
         $allowed_atts = array(
@@ -195,14 +223,40 @@ if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
             }
         }
         $table_html .= '</div>';
+        echo $table_html;die;
 
         echo wp_kses($table_html, $allowedposttags);
     }
+
+
     function getPaytmOrderData($order_id)
     {
         global $wpdb;
         $sql = "SELECT * FROM `".$wpdb->prefix ."paytm_order_data` WHERE `order_id` = '".$order_id."' ORDER BY `id` DESC LIMIT 1";
         return $wpdb->get_row($sql, "ARRAY_A");
+    }
+
+    function get_custom_order($order_id) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'wc_orders';
+
+        $order = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM $table_name WHERE id = %d",
+                $order_id
+            ),
+            ARRAY_A
+        );
+
+        if ($order) {
+            $order_data = maybe_unserialize($order['order_data']);
+
+            // Additional processing if needed
+
+            return $order_data;
+        }
+
+        return null;
     }
 
     add_action('admin_head', 'woocommerce_paytm_add_css_js');
@@ -323,6 +377,7 @@ if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
 
         // WooCommerce payment gateway class to hook Payment gateway
         require_once(plugin_basename('class.paytm.php'));
+
 
         add_filter('woocommerce_payment_gateways', 'woocommerce_add_paytm_gateway' );
         function woocommerce_add_paytm_gateway($methods) 
