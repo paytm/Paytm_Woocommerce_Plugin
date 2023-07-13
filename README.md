@@ -58,4 +58,4 @@ Note: In case you have installed the plugin directly from the wordpress dashboar
 
 == Step-3: Configuration ==
 
-* Developer Docs: https://bussiness.paytm.com/docs/woocommerce/
+* Developer Docs: https://business.paytm.com/docs/woocommerce/
