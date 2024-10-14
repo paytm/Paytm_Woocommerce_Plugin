@@ -3,16 +3,16 @@
  * Plugin Name: Paytm WooCommerce Payment Gateway
  * Plugin URI: https://github.com/Paytm/
  * Description: This plugin allow you to accept payments using Paytm. This plugin will add a Paytm Payment option on WooCommerce checkout page, when user choses Paytm as Payment Method, he will redirected to Paytm website to complete his transaction and on completion his payment, paytm will send that user back to your website along with transactions details. This plugin uses server-to-server verification to add additional security layer for validating transactions. Admin can also see payment status for orders by navigating to WooCommerce > Orders from menu in admin.
- * Version: 2.8.0
+ * Version: 2.8.6
  * Author: Paytm
  * Author URI: https://business.paytm.com/payment-gateway
  * Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
  * Requires at least: 4.0.1
- * Tested up to: 6.2
+ * Tested up to: 6.6.2
  * Requires PHP: 7.4
  * Text Domain: Paytm Payments
  * WC requires at least: 2.0.0
- * WC tested up to: 7.8.2
+ * WC tested up to: 9.0.2
  */
 
 
@@ -36,6 +36,7 @@ add_action( 'before_woocommerce_init', function() {
     if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
         \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', __FILE__, true );
         \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'product_block_editor', __FILE__, true );
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, true);
     }
 } );
 
@@ -49,6 +50,28 @@ function woocommerce_paytm_add_action_links( $links )
     );
      return array_merge($settting_url, $links);
 }
+
+/**
+ * Checkout Block code Start
+ */
+add_action( 'woocommerce_blocks_loaded', 'paytm_register_order_approval_payment_method_type' );
+
+function paytm_register_order_approval_payment_method_type() {
+    // Check if the required class exists
+    if ( ! class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
+        return;
+    }
+
+    // Paytm custom Blocks Checkout class
+    require_once plugin_dir_path(__FILE__) . 'class-block.php';
+    add_action(
+        'woocommerce_blocks_payment_method_type_registration',
+        function( Automattic\WooCommerce\Blocks\Payments\PaymentMethodRegistry $payment_method_registry ) {
+            $payment_method_registry->register( new WC_Paytm_Blocks );
+        }
+    );
+}
+/* ************************************************ */
 
 /* Create table 'paytm_order_data' after install paytm plugin */
 if (function_exists('register_activation_hook'))
@@ -78,7 +101,7 @@ function install_paytm_plugin()
 
 function uninstall_paytm_plugin()
 {
-    global $wpdb;
+   /*  global $wpdb;
     $table_name = $wpdb->prefix . 'paytm_order_data';
     $query = "SELECT * FROM $table_name";
     $results = $wpdb->get_results($query);
@@ -86,7 +109,7 @@ function uninstall_paytm_plugin()
         $sql = "DROP TABLE IF EXISTS $table_name";
         $wpdb->query($sql);
     }
-    delete_option('woocommerce_paytm_settings');
+    delete_option('woocommerce_paytm_settings'); */
 }
 function paytmWoopayment_enqueue_style() 
 {
@@ -223,7 +246,7 @@ if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
             }
         }
         $table_html .= '</div>';
-        echo $table_html;die;
+        /* echo $table_html;die; */
 
         echo wp_kses($table_html, $allowedposttags);
     }

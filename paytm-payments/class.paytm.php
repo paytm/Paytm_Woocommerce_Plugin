@@ -18,10 +18,10 @@ class WC_Paytm extends WC_Payment_Gateway
         $getPaytmSetting = get_option('woocommerce_paytm_settings');
         $invertLogo = isset($getPaytmSetting['invertLogo'])?$getPaytmSetting['invertLogo']:"0";
         if ($invertLogo == 1) {
-            $this->icon= esc_url("https://staticpg.paytm.in/pg_plugins_logo/paytm_logo_invert.svg");
+            $this->icon= esc_url("https://staticpg.paytmpayments.com/pg_plugins_logo/paytm_logo_invert.svg");
         }
         else {
-            $this->icon= esc_url("https://staticpg.paytm.in/pg_plugins_logo/paytm_logo_paymodes.svg");
+            $this->icon= esc_url("https://staticpg.paytmpayments.com/pg_plugins_logo/paytm_logo_paymodes.svg");
         }
         $this->has_fields= false;
 
@@ -50,6 +50,8 @@ class WC_Paytm extends WC_Payment_Gateway
                 add_action('woocommerce_update_options_payment_gateways', array( &$this, 'process_admin_options' ) );
         }
         add_action('woocommerce_receipt_' . $this->id, array($this, 'receipt_page'));
+        
+        
     }
 
 
@@ -97,7 +99,7 @@ class WC_Paytm extends WC_Payment_Gateway
         $checkout_page_id = get_option('woocommerce_checkout_page_id');
         $checkout_page_id = (int) $checkout_page_id > 0 ? $checkout_page_id : 7;
         $webhookUrl = esc_url(get_site_url() . '/?wc-api=WC_Paytm&webhook=yes');
-        $paytmDashboardLink = esc_url("https://dashboard.paytm.com/next/apikeys");
+        $paytmDashboardLink = esc_url("https://dashboard.paytmpayments.com/next/apikeys");
         $paytmPaymentStatusLink = esc_url("https://developer.paytm.com/docs/payment-status/");
         $paytmContactLink = esc_url("https://business.paytm.com/contact-us#developer");
         $this->form_fields = array(
@@ -308,6 +310,7 @@ class WC_Paytm extends WC_Payment_Gateway
     **/
     public function receipt_page($order) 
     {
+        
         echo $this->generate_paytm_form($order);
     }
     public function getOrderInfo($order)
@@ -366,7 +369,7 @@ class WC_Paytm extends WC_Payment_Gateway
                 $paytmParams["body"]["simplifiedSubvention"]["customerId"]= $paramData['cust_id'];
                 $paytmParams["body"]["simplifiedSubvention"]["subventionAmount"]= $paramData['amount'];
                 $paytmParams["body"]["simplifiedSubvention"]["selectPlanOnCashierPage"]= true;
-                $paytmParams["body"]["simplifiedSubvention"]["offerDetails"]["offerId"]= 1;
+                //$paytmParams["body"]["simplifiedSubvention"]["offerDetails"]["offerId"]= 1;
             }
             // for DC EMI
             if ($this->getSetting('dcEmi') ==1) {
@@ -423,12 +426,12 @@ class WC_Paytm extends WC_Payment_Gateway
         }
         $settings = get_option("woocommerce_paytm_settings");
         $checkout_url= str_replace('MID', $settings['merchant_id'], PaytmHelper::getPaytmURL(PaytmConstants::CHECKOUT_JS_URL, $settings['environment']));
-        echo '';
+        //echo '';
 
-        $wait_msg='<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" onload="invokeBlinkCheckoutPopup();"></script><div id="paytm-pg-spinner" class="paytm-woopg-loader"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div><div class="bounce4"></div><div class="bounce5"></div><p class="loading-paytm">Loading Paytm...</p></div><div class="paytm-overlay paytm-woopg-loader"></div><div class="paytm-action-btn"><a href="" class="refresh-payment re-invoke">Pay Now</a><a href="'.wc_get_checkout_url().'" class="refresh-payment">Cancel</a></div>';
+        $wait_msg='<script type="application/javascript" crossorigin="anonymous" src="'.$checkout_url.'" onload="invokeBlinkCheckoutPopup();"></script><div id="paytm-pg-spinner" class="paytm-woopg-loader"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div><div class="bounce4"></div><div class="bounce5"></div><p class="loading-paytm">Loading Paytm</p></div><div class="paytm-overlay paytm-woopg-loader"></div><div class="paytm-action-btn"><a href="" class="refresh-payment re-invoke">Pay Now</a><a href="'.wc_get_checkout_url().'" class="refresh-payment">Cancel</a></div>';
         $paramData = array('amount' => $getOrderInfo['amount'], 'order_id' => $order_id, 'cust_id' => $cust_id,'cust_mob_no' => $cust_mob_no);
         $data= $this->blinkCheckoutSend($paramData);
-        return '<script type="text/javascript">
+        return '<div class="pg-paytm-checkout"><script type="text/javascript">
 			function invokeBlinkCheckoutPopup(){
 				console.log("method called");
 				var config = {
@@ -450,9 +453,13 @@ class WC_Paytm extends WC_Payment_Gateway
 						if(eventName=="APP_CLOSED")
 						{
 							jQuery(".loading-paytm").hide();
-							jQuery("#paytm-pg-spinner").hide();
+							jQuery(".paytm-woopg-loader").hide();
 							jQuery(".paytm-overlay").hide();
 							jQuery(".refresh-payment").show();
+                            if(jQuery(".pg-paytm-checkout").length>1){
+                            jQuery(".pg-paytm-checkout:nth-of-type(2)").remove();
+                            }
+                            jQuery(".paytm-action-btn").show();
 						}
 					  } 
 					}
@@ -460,16 +467,16 @@ class WC_Paytm extends WC_Payment_Gateway
 				  if(window.Paytm && window.Paytm.CheckoutJS){
 					  window.Paytm.CheckoutJS.onLoad(function excecuteAfterCompleteLoad() {
 						  window.Paytm.CheckoutJS.init(config).then(function onSuccess() {
-							  window.Paytm.CheckoutJS.invoke();
+							   window.Paytm.CheckoutJS.invoke(); 
 						  }).catch(function onError(error){
 							  console.log("error => ",error);
 						  });
 					  });
 				  } 
 			}
-			jQuery(document).ready(function(){ jQuery(".re-invoke").on("click",function(){ window.Paytm.CheckoutJS.invoke(); return false; }); });
-			</script>'.$wait_msg.'
-			';
+			jQuery(document).ready(function(){ jQuery(".re-invoke").on("click",function(){ window.Paytm.CheckoutJS.invoke();  return false; }); });
+			</script>'.$wait_msg.'</div>
+			'; 
 
     }
 
@@ -530,7 +537,11 @@ class WC_Paytm extends WC_Payment_Gateway
                 } else {
                      $orderCheck = new woocommerce_order($getOrderId);
                 }
-
+                $result = getPaytmOrderData($getOrderId);
+                if(isset($result) && json_decode($result['paytm_response'],true)['STATUS']=="TXN_SUCCESS")
+                {
+                    exit;
+                }
                 if ($orderCheck->status == "processing" || $orderCheck->status == "completed") {
                      exit;
                 }
@@ -732,6 +743,7 @@ function setPaymentNotificationUrl()
         $mkey = sanitize_text_field($_POST['mkey']);
         if ($_POST['is_webhook']==1) {
            $webhookUrl = sanitize_text_field($_POST['webhookUrl']);
+           //$webhookUrl = sanitize_text_field("https://www.dummyUrl.com");
         } else {
             $webhookUrl = esc_url("https://www.dummyUrl.com"); //set this when unchecked
         }
@@ -743,7 +755,6 @@ function setPaymentNotificationUrl()
           );
         $checksum = PaytmChecksum::generateSignature(json_encode($paytmParams, JSON_UNESCAPED_SLASHES), $mkey); 
         $res= PaytmHelper::executecUrl($url.'api/v1/external/putMerchantInfo', $paytmParams, $method ='PUT',['x-checksum'=>$checksum]);
-   // print_r($res);
         if (isset($res['success'])) {
         $message = true;
         $success = $response;

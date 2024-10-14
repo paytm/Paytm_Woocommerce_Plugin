@@ -7,17 +7,10 @@ class PaytmChecksum{
 	static public function encrypt($input, $key) {
 		$key = html_entity_decode($key);
 
-		if(function_exists('openssl_encrypt')){
-			$data = openssl_encrypt ( $input , "AES-128-CBC" , $key, 0, self::$iv );
+		if (function_exists('openssl_encrypt')) {
+			$data = openssl_encrypt($input, "AES-128-CBC", $key, 0, self::$iv);
 		} else {
-			$size = mcrypt_get_block_size(MCRYPT_RIJNDAEL_128, 'cbc');
-			$input = self::pkcs5Pad($input, $size);
-			$td = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', 'cbc', '');
-			mcrypt_generic_init($td, $key, self::$iv);
-			$data = mcrypt_generic($td, $input);
-			mcrypt_generic_deinit($td);
-			mcrypt_module_close($td);
-			$data = base64_encode($data);
+			throw new Exception('OpenSSL extension is not available. Please install the OpenSSL extension.');
 		}
 		return $data;
 	}
@@ -28,14 +21,7 @@ class PaytmChecksum{
 		if(function_exists('openssl_decrypt')){
 			$data = openssl_decrypt ( $encrypted , "AES-128-CBC" , $key, 0, self::$iv );
 		} else {
-			$encrypted = base64_decode($encrypted);
-			$td = mcrypt_module_open(MCRYPT_RIJNDAEL_128, '', 'cbc', '');
-			mcrypt_generic_init($td, $key, self::$iv);
-			$data = mdecrypt_generic($td, $encrypted);
-			mcrypt_generic_deinit($td);
-			mcrypt_module_close($td);
-			$data = self::pkcs5Unpad($data);
-			$data = rtrim($data);
+			throw new Exception('OpenSSL extension is not available. Please install the OpenSSL extension.');
 		}
 		return $data;
 	}

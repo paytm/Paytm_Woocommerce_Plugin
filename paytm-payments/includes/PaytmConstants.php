@@ -1,10 +1,10 @@
 <?php
 class PaytmConstants{
-    CONST TRANSACTION_STATUS_URL_PRODUCTION= "https://securegw.paytm.in/order/status";
-    CONST TRANSACTION_STATUS_URL_STAGING= "https://securegw-stage.paytm.in/order/status";
+    CONST TRANSACTION_STATUS_URL_PRODUCTION= "https://secure.paytmpayments.com/order/status";
+    CONST TRANSACTION_STATUS_URL_STAGING= "https://securestage.paytmpayments.com/order/status";
 
-    CONST PRODUCTION_HOST= "https://securegw.paytm.in/";
-    CONST STAGING_HOST= "https://securegw-stage.paytm.in/";
+    CONST PRODUCTION_HOST= "https://secure.paytmpayments.com/";
+    CONST STAGING_HOST= "https://securestage.paytmpayments.com/";
 
     CONST ORDER_PROCESS_URL= "order/process";
     CONST ORDER_STATUS_URL= "order/status";
@@ -23,9 +23,9 @@ class PaytmConstants{
     CONST CONNECT_TIMEOUT= 10;
     CONST TIMEOUT= 10;
 
-    CONST LAST_UPDATED= "20230713";
-    CONST PLUGIN_VERSION= "2.8.0";
-    CONST PLUGIN_VERSION_FOLDER= "280";
+    CONST LAST_UPDATED= "20241014";
+    CONST PLUGIN_VERSION= "2.8.6";
+    CONST PLUGIN_VERSION_FOLDER= "286";
 
     CONST CUSTOM_CALLBACK_URL= "";
 
@@ -65,8 +65,8 @@ class PaytmConstants{
     CONST ERROR_CURL_DISABLED= "cURL is not enabled properly. Please verify.";
     CONST ERROR_CURL_WARNING= "Your server is unable to connect with us. Please contact to Paytm Support.";
 
-    CONST WEBHOOK_STAGING_URL= "https://boss-stage.paytm.in/";
-    CONST WEBHOOK_PRODUCTION_URL= "https://boss-ext.paytm.in/";
+    CONST WEBHOOK_STAGING_URL= "https://boss-stage.paytmpayments.com/";
+    CONST WEBHOOK_PRODUCTION_URL= "https://boss-ext.paytmpayments.com/";
 
 }
 

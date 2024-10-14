@@ -1,10 +1,10 @@
 === Paytm Payment Gateway === 
 Contributors: integrationdevpaytm
-Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
+Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Payment Gateway
 Requires PHP: 7.4
 Requires at least: 4.0.1
-Tested up to: 6.2
-Stable tag: 2.8.0
+Tested up to: 6.5.5
+Stable tag: 2.8.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,15 +32,15 @@ Welcome to the official Paytm Payment Gateway plugin for Woocommerce. Paytm Paym
 
 == Getting Started == 
 
-New to PaytmPG? Use this [link](https://dashboard.paytm.com) to create your Paytm for Business account and get access to exciting offers.
+New to PaytmPG? Use this [link](https://dashboard.paytmpayments.com) to create your Paytm for Business account and get access to exciting offers.
 
 Before enabling the Paytm Payment Gateway on Woocommerce, make sure you have a registered business account with Paytm. Please visit - 
-[Paytm Dashboard](https://dashboard.paytm.com) to sign-up
+[Paytm Dashboard](https://dashboard.paytmpayments.com) to sign-up
 
 == Step-1: Generate your API keys with Paytm ==
 
 To generate the API Key,
-* Log into your [Dashboard](https://dashboard.paytm.com/).
+* Log into your [Dashboard](https://dashboard.paytmpayments.com/).
 * Select the API Keys under Developers on the left menu-bar.
 * Select the mode for which you want to generate the API Key from the menu.
 * Click Generate now to generate a key for the test mode and in case of live mode, first activate the account by submitting documents and then generate the key by clicking the Generate now button.
@@ -81,7 +81,7 @@ Note: In case you have installed the plugin directly from the wordpress dashboar
 	* Environment - Select environment type
 
 Your Paytm payment gateway is enabled. Now you can accept payment through Paytm.
-In case of any issues with integration, please [get in touch](https://business.paytm.com/contact-us#developer).
+In case of any issues with integration, please [get in touch](https://www.paytmpayments.com/contact-us.html).
 
 == Screenshots ==
 
@@ -99,10 +99,22 @@ In case of any issues with integration, please [get in touch](https://business.p
 
 == Changelog ==
 
+= 2.8.6 =
+* PPSL PG Redirection
+
+= 2.8.5 =
+* Webhook response handling improvment 
+* PHP 8.3 support added.
+* EMI subvention handling improvment
+
+= 2.8.4 =
+* Compatible and tested with WooCommerce version up to 9.0.2.
+* Supports Checkout Block feature. 
+* Enhanced security with updates.
+
 = 2.8.0 =
 * Compatible and tested with WooCommerce version up to 7.8.2.
 * Supports HPOS WooCommerce feature.
-* Optimized JS and CSS.
 * Enhanced security with updates.
 
 = 2.7.9 =

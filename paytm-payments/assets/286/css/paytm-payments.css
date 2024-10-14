@@ -1,5 +1,5 @@
 #paytm-pg-spinner {
-    width: 70px;
+    width: 120px;
     text-align: center;
     z-index: 999999;
     position: fixed;
@@ -78,7 +78,8 @@
 }
 
 .paytm-woopg-loader p {
-    font-size: 10px !important;
+    font-size: 15px !important;
+    color:#ffffff;
 }
 
 .paytm-woopg-loader a {
@@ -95,7 +96,7 @@
     color: #fff;
     text-decoration: none;
 }
-.paytm-action-btn{display: block;padding: 25px;}
+.paytm-action-btn{display: none;padding: 25px;}
 
 /*.wc_payment_method label img {max-width: 100% !important;width: 350px !important;}
 */
