@@ -24,15 +24,15 @@ Welcome to the official Paytm Payment Gateway plugin for Woocommerce. Paytm Paym
 
 == Getting Started == 
 
-New to PaytmPG? Use this [link](https://dashboard.paytm.com) to create your Paytm for Business account and get access to exciting offers.
+New to PaytmPG? Use this [link](https://dashboard.paytmpayments.com) to create your Paytm for Business account and get access to exciting offers.
 
 Before enabling the Paytm Payment Gateway on Woocommerce, make sure you have a registered business account with Paytm. Please visit - 
-[Paytm Dashboard](https://dashboard.paytm.com) to sign-up
+[Paytm Dashboard](https://dashboard.paytmpayments.com) to sign-up
 
 == Step-1: Generate your API keys with Paytm ==
 
 To generate the API Key,
-* Log into your [Dashboard](https://dashboard.paytm.com/).
+* Log into your [Dashboard](https://dashboard.paytmpayments.com/).
 * Select the API Keys under Developers on the left menu-bar.
 * Select the mode for which you want to generate the API Key from the menu.
 * Click Generate now to generate a key for the test mode and in case of live mode, first activate the account by submitting documents and then generate the key by clicking the Generate now button.
