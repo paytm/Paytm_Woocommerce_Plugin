@@ -28,7 +28,7 @@ class PaytmChecksum{
 
 	static public function generateSignature($params, $key) {
 		if(!is_array($params) && !is_string($params)){
-			throw new Exception("string or array expected, ".gettype($params)." given");			
+			throw new Exception("string or array expected");			
 		}
 		if(is_array($params)){
 			$params = self::getStringByParams($params);			
@@ -38,7 +38,7 @@ class PaytmChecksum{
 
 	static public function verifySignature($params, $key, $checksum){
 		if(!is_array($params) && !is_string($params)){
-			throw new Exception("string or array expected, ".gettype($params)." given");
+			throw new Exception("string or array expected");
 		}
 		if(is_array($params)){
 			$params = self::getStringByParams($params);

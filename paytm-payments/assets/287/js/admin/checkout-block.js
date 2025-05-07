@@ -1,5 +1,10 @@
 const paytmsettings = window.wc.wcSettings.getSetting( 'paytm_data', {} ); 
 const paytmlabel = window.wp.htmlEntities.decodeEntities( paytmsettings.title ) || window.wp.i18n.__( 'Paytm WooCommerce Payment Gateway', 'paytm' );
+const invertLogo = window.wp.htmlEntities.decodeEntities( paytmsettings.invertLogo ) ;
+src = "https://staticpg.paytmpayments.com/pg_plugins_logo/paytm_logo_paymodes.svg";
+if(invertLogo==1){
+    src = "https://staticpg.paytmpayments.com/pg_plugins_logo/paytm_logo_invert.svg";
+}
 const paytmContent = () => {
     return window.wp.htmlEntities.decodeEntities( paytmsettings.description || '' );
 }; 
@@ -9,7 +14,7 @@ const paytmContent = () => {
         'span', 
         null, 
         wp.element.createElement('img', { 
-            src: 'https://staticpg.paytmpayments.com/pg_plugins_logo/paytm_logo_paymodes.svg', 
+            src: src, 
             alt: paytmlabel,
         }),
         ''

@@ -108,6 +108,7 @@ if(!class_exists('PaytmHelper')) :
                 'headers' => $headers,
                 'body'      => json_encode($requestParamList, JSON_UNESCAPED_SLASHES),
                 'method'    => $method,
+                'sslverify' => false
             );
 
             $result =  wp_remote_request( $apiURL, $args );

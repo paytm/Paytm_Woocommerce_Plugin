@@ -301,7 +301,7 @@ class WC_Paytm extends WC_Payment_Gateway
     **/
     public function payment_fields()
     {
-        if($this->description) echo wpautop(wptexturize($this->description));
+        if($this->description) echo esc_html(wptexturize(esc_html($this->description)));
     }
 
 

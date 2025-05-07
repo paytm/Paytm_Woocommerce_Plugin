@@ -42,6 +42,7 @@ final class WC_Paytm_Blocks extends AbstractPaymentMethodType {
         return [
             'title' => "Pay With Paytm",
             'description' => $this->settings['description'],
+            'invertLogo' => $this->settings['invertLogo'],
         ];
     } 
 
