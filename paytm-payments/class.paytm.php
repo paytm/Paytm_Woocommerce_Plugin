@@ -528,7 +528,7 @@ class WC_Paytm extends WC_Payment_Gateway
         global $woocommerce;
 
         if (!empty($_POST['STATUS'])) {
-
+            
             //check order status before executing webhook call
             if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
                 $getOrderId = !empty($_POST['ORDERID'])? PaytmHelper::getOrderId(sanitize_text_field($_POST['ORDERID'])) : 0;
@@ -572,10 +572,20 @@ class WC_Paytm extends WC_Payment_Gateway
                 } else {
                     $order = new woocommerce_order($order_id);
                 }
-                if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
-                    $through = "webhook_".time();
-                } else {
-                    $through = "callback_".time();
+                // Determine response type
+                $is_webhook = isset($_GET['webhook']) && $_GET['webhook'] == 'yes';
+                $through = ($is_webhook ? "webhook_" : "callback_") . time();
+                                
+                $order = wc_get_order($order_id);
+                $existing_meta = $order->get_meta('paytmresponse_type');
+                
+                if (empty($existing_meta) && ($_POST['STATUS'] == 'TXN_SUCCESS' OR $_POST['STATUS'] == 'TXN_FAILURE')) {
+                    $order->update_meta_data('paytmresponse_type', $through);
+                    $order->save();
+                }
+                
+                if ($is_webhook) {
+                    sleep(1);
                 }
                 if (!empty($order)) {
 
@@ -610,13 +620,21 @@ class WC_Paytm extends WC_Payment_Gateway
                         $this->fireFailure($order, __(PaytmConstants::ERROR_SERVER_COMMUNICATION));
                     } else {
                         if ($resParams['STATUS'] == 'TXN_SUCCESS') {
-
-                            if ($order->status !=='completed') {
+                            
+                            // Reload order from DB to get fresh status and meta
+                            $order = wc_get_order($order_id);
+                            $order_status = $order->get_status();
+                            
+                            if ($order_status !== 'completed') {
 
                                 $this->msg['message']= __(PaytmConstants::SUCCESS_ORDER_MESSAGE);
                                 $this->msg['class']= 'success';
-
-                                if ($order->status !== 'processing') {
+                                
+                                // Read fresh meta from reloaded order
+                                $paytmresponse_type = $order->get_meta('paytmresponse_type');
+                                
+                                // Process only if: not already processing AND this process claimed the order
+                                if ($order_status !== 'processing' && $paytmresponse_type == $through) {
                                         $order->payment_complete($resParams['TXNID']);
                                         $order->reduce_order_stock();
 
