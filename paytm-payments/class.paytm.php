@@ -1,4 +1,7 @@
 <?php
+if (! defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
 /**
  * Gateway class
  */
@@ -116,7 +119,7 @@ class WC_Paytm extends WC_Payment_Gateway
                 'default'       => __(PaytmConstants::DESCRIPTION, $this->id)
             ),
             'environment' => array(
-                'title'         => __('Environment'), $this->id,
+                'title'         => __('Environment', 'paytm-payments'),
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "Test/Staging", "1" => "Production"),
@@ -124,25 +127,25 @@ class WC_Paytm extends WC_Payment_Gateway
                 'default'       => '0'
             ),
             'merchant_id'=> array(
-                'title'         => __('Test/Production MID'),
+                'title'         => __('Test/Production MID', 'paytm-payments'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'description'   => __('Based on the selected Environment Mode, copy the relevant Merchant ID for test or production environment available on <a href="'.$paytmDashboardLink.'" target="_blank">Paytm dashboard</a>.', $this->id),
             ),
             'merchant_key' => array(
-                'title'         => __('Test/Production Secret Key'),
+                'title'         => __('Test/Production Secret Key', 'paytm-payments'),
                 'type'          => 'text',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'description'   => __('Based on the selected Environment Mode, copy the Merchant Key for test or production environment available on <a href="'.$paytmDashboardLink.'" target="_blank">Paytm dashboard</a>.', $this->id),
             ),
             /*'website' => array(
-                 'title'         => __('Website Name'),
+                 'title'         => __('Website Name', 'paytm-payments'),
                  'type'          => 'text',
                  'custom_attributes' => array( 'required' => 'required' ),
                  'description'   => __('Enter "WEBSTAGING" for test/integration environment & "DEFAULT" for production environment.', $this->id),
              ),*/
             'website' => array(
-                'title'         => __('Website (Provided by Paytm)'), $this->id,
+                'title'         => __('Website (Provided by Paytm)', 'paytm-payments'),
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => $websiteOptionFromDB,
@@ -150,7 +153,7 @@ class WC_Paytm extends WC_Payment_Gateway
                 'default'       => 'WEBSTAGING'
             ),
             'otherWebsiteName' => array(
-                'title'         => __('Other Website Name'),
+                'title'         => __('Other Website Name', 'paytm-payments'),
                 'type'          => 'text',
                 //'custom_attributes' => array('placeholder' => __( 'Webiste Name', 'woocommerce' ),),
                 'description'   => __("<span class='otherWebsiteName-error-message' style='color:red'></span>", $this->id),
@@ -163,7 +166,7 @@ class WC_Paytm extends WC_Payment_Gateway
                 'default' => 'no'
             ),
             'emiSubvention' => array(
-                'title'         => __('Enable EMI Subvention'), $this->id,
+                'title'         => __('Enable EMI Subvention', 'paytm-payments'),
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
@@ -171,7 +174,7 @@ class WC_Paytm extends WC_Payment_Gateway
                 'description' => 'Get your EMI Subvention plans configured at <a href="'.$paytmContactLink.'" target="_blank">Paytm</a> & then Select "Yes" to offer EMI Subvention to your customers.'
             ),
             'bankOffer' => array(
-                'title'         => __('Enable Bank Offers'), $this->id,
+                'title'         => __('Enable Bank Offers', 'paytm-payments'),
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
@@ -179,7 +182,7 @@ class WC_Paytm extends WC_Payment_Gateway
                 'description'=> 'Get your Bank Offer plans configured at <a href="'.$paytmContactLink.'" target="_blank">Paytm</a> & then Select "Yes" to provide Bank Offer to your customers.'
             ),
             'dcEmi' => array(
-                'title'         => __('Enable DC EMI'), $this->id,
+                'title'         => __('Enable DC EMI', 'paytm-payments'),
                 'type'          => 'select',
                 'custom_attributes' => array( 'required' => 'required' ),
                 'options'       => array("0" => "No", "1" => "Yes"),
@@ -188,7 +191,7 @@ class WC_Paytm extends WC_Payment_Gateway
                 'description' => 'Get DC EMI enabled for your MID and then select "Yes" to offer DC EMI to your customer. Customer mobile number is mandatory for DC EMI.'
             ),
             'invertLogo' => array(
-                'title'         => __('Enable Invert Logo'), $this->id,
+                'title'         => __('Enable Invert Logo', 'paytm-payments'),
                 'type'          => 'select',
                 'options'       => array("0" => "No", "1" => "Yes"),
                 'default'       => '0',
@@ -283,11 +286,11 @@ class WC_Paytm extends WC_Payment_Gateway
         $last_updated = date("d F Y", strtotime(PaytmConstants::LAST_UPDATED)) .' - '.PaytmConstants::PLUGIN_VERSION;
 
         $footer_text = '<div style="text-align: center;"><hr/>';
-        $footer_text .= '<strong>'.__('PHP Version').'</strong> '. PHP_VERSION . ' | ';
-        $footer_text .= '<strong>'.__('cURL Version').'</strong> '. $curl_version . ' | ';
-        $footer_text .= '<strong>'.__('Wordpress Version').'</strong> '. get_bloginfo('version') . ' | ';
-        $footer_text .= '<strong>'.__('WooCommerce Version').'</strong> '. WOOCOMMERCE_VERSION . ' | ';
-        $footer_text .= '<strong>'.__('Last Updated').'</strong> '. $last_updated. ' | ';
+        $footer_text .= '<strong>'.__('PHP Version', 'paytm-payments').'</strong> '. PHP_VERSION . ' | ';
+        $footer_text .= '<strong>'.__('cURL Version', 'paytm-payments').'</strong> '. $curl_version . ' | ';
+        $footer_text .= '<strong>'.__('Wordpress Version', 'paytm-payments').'</strong> '. get_bloginfo('version') . ' | ';
+        $footer_text .= '<strong>'.__('WooCommerce Version', 'paytm-payments').'</strong> '. WOOCOMMERCE_VERSION . ' | ';
+        $footer_text .= '<strong>'.__('Last Updated', 'paytm-payments').'</strong> '. $last_updated. ' | ';
         $footer_text .= '<a href="'.esc_url(PaytmConstants::PLUGIN_DOC_URL).'" target="_blank">Developer Docs</a>';
 
         $footer_text .= '</div>';
@@ -522,177 +525,237 @@ class WC_Paytm extends WC_Payment_Gateway
 
     /**
      * Check for valid paytm server callback // response processing //
+     * Hardened for CVE-2026-81740 (unauthenticated order status manipulation).
     **/
     public function check_paytm_response()
     {
         global $woocommerce;
 
-        if (!empty($_POST['STATUS'])) {
-            
-            //check order status before executing webhook call
-            if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
-                $getOrderId = !empty($_POST['ORDERID'])? PaytmHelper::getOrderId(sanitize_text_field($_POST['ORDERID'])) : 0;
-                if ( version_compare(WOOCOMMERCE_VERSION, '2.0.0', '>=' ) ) {
-                    $orderCheck = new WC_Order($getOrderId);
-                } else {
-                     $orderCheck = new woocommerce_order($getOrderId);
-                }
-                $result = getPaytmOrderData($getOrderId);
-                if(isset($result) && json_decode($result['paytm_response'],true)['STATUS']=="TXN_SUCCESS")
-                {
-                    exit;
-                }
-                if ($orderCheck->status == "processing" || $orderCheck->status == "completed") {
-                     exit;
-                }
+        if (empty($_POST['STATUS'])) {
+            return;
+        }
+
+        $is_webhook   = isset($_GET['webhook']) && 'yes' === sanitize_text_field(wp_unslash($_GET['webhook']));
+        $merchant_key = trim((string) $this->getSetting('merchant_key'));
+        $merchant_id  = trim((string) $this->getSetting('merchant_id'));
+
+        // Reject unconfigured gateway (empty key allows forged checksums).
+        if ($merchant_key === '' || $merchant_id === '') {
+            status_header(403);
+            exit('Paytm is not configured.');
+        }
+
+        if (!empty($_POST['CHECKSUMHASH'])) {
+            $post_checksum = sanitize_text_field(wp_unslash($_POST['CHECKSUMHASH']));
+            unset($_POST['CHECKSUMHASH']);
+        } else {
+            $post_checksum = '';
+        }
+
+        if ($post_checksum === '') {
+            status_header(400);
+            exit('Missing checksum.');
+        }
+
+        $order = null;
+        $isValidChecksum = false;
+        try {
+            $isValidChecksum = PaytmChecksum::verifySignature($_POST, $merchant_key, $post_checksum);
+        } catch (Exception $e) {
+            $isValidChecksum = false;
+        }
+
+        if ($isValidChecksum !== true) {
+            status_header(403);
+            exit('Checksum mismatch.');
+        }
+
+        $paytm_order_id = !empty($_POST['ORDERID']) ? sanitize_text_field(wp_unslash($_POST['ORDERID'])) : '';
+        $order_id       = $paytm_order_id ? absint(PaytmHelper::getOrderId($paytm_order_id)) : 0;
+        $order          = $order_id ? wc_get_order($order_id) : false;
+
+        if (!$order) {
+            status_header(404);
+            exit('Invalid order.');
+        }
+
+        // Only allow Paytm gateway orders.
+        if ($order->get_payment_method() !== PaytmConstants::ID && $order->get_payment_method() !== 'paytm') {
+            status_header(400);
+            exit('Invalid payment method.');
+        }
+
+        // Already paid: ignore further success/failure (callback + webhook).
+        if ($order->has_status(array('processing', 'completed'))) {
+            $this->finish_paytm_response($order, $is_webhook, true);
+            return;
+        }
+
+        $saved = function_exists('getPaytmOrderData') ? getPaytmOrderData($order_id) : null;
+        if (!empty($saved['paytm_response'])) {
+            $saved_data = json_decode($saved['paytm_response'], true);
+            if (is_array($saved_data) && isset($saved_data['STATUS']) && 'TXN_SUCCESS' === $saved_data['STATUS']) {
+                $this->finish_paytm_response($order, $is_webhook, true);
+                return;
             }
-            //end webhook check
+        }
 
-            if (!empty($_POST['CHECKSUMHASH'])) {
-                $post_checksum = sanitize_text_field($_POST['CHECKSUMHASH']);
-                unset($_POST['CHECKSUMHASH']);
-            } else {
-                  $post_checksum = "";
+        $order_data_id = false;
+        if (PaytmConstants::SAVE_PAYTM_RESPONSE && !empty($_POST['STATUS'])) {
+            $order_data_id = saveTxnResponse($order_id, false, wp_unslash($_POST));
+        }
+
+        $responseDescription = !empty($_POST['RESPMSG']) ? sanitize_text_field(wp_unslash($_POST['RESPMSG'])) : '';
+        $through             = ($is_webhook ? 'webhook_' : 'callback_') . time();
+
+        $existing_meta = $order->get_meta('paytmresponse_type');
+        if (empty($existing_meta) && in_array($_POST['STATUS'], array('TXN_SUCCESS', 'TXN_FAILURE'), true)) {
+            $order->update_meta_data('paytmresponse_type', $through);
+            $order->save();
+        }
+
+        if ($is_webhook) {
+            sleep(1);
+        }
+
+        $reqParams = array(
+            'MID'     => $merchant_id,
+            'ORDERID' => $paytm_order_id,
+        );
+        $reqParams['CHECKSUMHASH'] = PaytmChecksum::generateSignature($reqParams, $merchant_key);
+
+        $retry     = 1;
+        $resParams = array();
+        do {
+            $resParams = PaytmHelper::executecUrl(
+                PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, $this->getSetting('environment')),
+                $reqParams
+            );
+            $retry++;
+        } while (empty($resParams['STATUS']) && $retry <= PaytmConstants::MAX_RETRY_COUNT);
+
+        // Never fall back to client POST for payment outcome (CVE-2026-81740).
+        if (empty($resParams) || empty($resParams['STATUS'])) {
+            $this->msg['class']   = 'error';
+            $this->msg['message'] = __(PaytmConstants::ERROR_SERVER_COMMUNICATION, 'paytm-payments');
+            if ($order instanceof WC_Order && !$order->has_status(array('processing', 'completed'))) {
+                $order->add_order_note($this->msg['message']);
             }
-            $order = array();
-            $isValidChecksum = PaytmChecksum::verifySignature($_POST, $this->getSetting('merchant_key'), $post_checksum);
-            if ($isValidChecksum === true) {
-                $order_id = !empty($_POST['ORDERID'])? PaytmHelper::getOrderId(sanitize_text_field($_POST['ORDERID'])) : 0;
+            $this->finish_paytm_response($order, $is_webhook, false);
+            return;
+        }
 
-                /* save paytm response in db */
-                if (PaytmConstants::SAVE_PAYTM_RESPONSE && !empty($_POST['STATUS'])) {
-                    $order_data_id = saveTxnResponse(PaytmHelper::getOrderId(sanitize_text_field($_POST['ORDERID'])), $_POST);
-                }
-                /* save paytm response in db */
+        if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
+            saveTxnResponse($order_id, $order_data_id, $resParams);
+        }
 
-                $responseDescription = (!empty($_POST['RESPMSG'])) ? sanitize_text_field($_POST['RESPMSG']) :"";
-
-                if (version_compare(WOOCOMMERCE_VERSION, '2.0.0', '>=') ) {
-                    $order = new WC_Order($order_id);
-                } else {
-                    $order = new woocommerce_order($order_id);
-                }
-                // Determine response type
-                $is_webhook = isset($_GET['webhook']) && $_GET['webhook'] == 'yes';
-                $through = ($is_webhook ? "webhook_" : "callback_") . time();
-                                
-                $order = wc_get_order($order_id);
-                $existing_meta = $order->get_meta('paytmresponse_type');
-                
-                if (empty($existing_meta) && ($_POST['STATUS'] == 'TXN_SUCCESS' OR $_POST['STATUS'] == 'TXN_FAILURE')) {
-                    $order->update_meta_data('paytmresponse_type', $through);
-                    $order->save();
-                }
-                
-                if ($is_webhook) {
-                    sleep(1);
-                }
-                if (!empty($order)) {
-
-                    $reqParams = array(
-                            "MID"=> $this->getSetting('merchant_id'),
-                            "ORDERID"=> sanitize_text_field($_POST['ORDERID']),
-                    );
-
-                    $reqParams['CHECKSUMHASH'] = PaytmChecksum::generateSignature($reqParams, $this->getSetting('merchant_key'));
-
-                    /* number of retries untill cURL gets success */
-                    $retry = 1;
-                    do {
-
-                        $resParams = PaytmHelper::executecUrl(PaytmHelper::getPaytmURL(PaytmConstants::ORDER_STATUS_URL, $this->getSetting('environment')), $reqParams);
-                        $retry++;
-                    } while(!$resParams['STATUS'] && $retry < PaytmConstants::MAX_RETRY_COUNT);
-                    /* number of retries untill cURL gets success */
-
-                    if (!isset($resParams['STATUS'])) {
-                        $resParams = $_POST;
-                    }
-
-                    /* save paytm response in db */
-                    if (PaytmConstants::SAVE_PAYTM_RESPONSE && !empty($resParams['STATUS'])) {
-                        saveTxnResponse(PaytmHelper::getOrderId($resParams['ORDERID']), $order_data_id, $resParams);
-                    }
-                    /* save paytm response in db */
-
-                        // if curl failed to fetch response
-                    if (!isset($resParams['STATUS'])) {
-                        $this->fireFailure($order, __(PaytmConstants::ERROR_SERVER_COMMUNICATION));
-                    } else {
-                        if ($resParams['STATUS'] == 'TXN_SUCCESS') {
-                            
-                            // Reload order from DB to get fresh status and meta
-                            $order = wc_get_order($order_id);
-                            $order_status = $order->get_status();
-                            
-                            if ($order_status !== 'completed') {
-
-                                $this->msg['message']= __(PaytmConstants::SUCCESS_ORDER_MESSAGE);
-                                $this->msg['class']= 'success';
-                                
-                                // Read fresh meta from reloaded order
-                                $paytmresponse_type = $order->get_meta('paytmresponse_type');
-                                
-                                // Process only if: not already processing AND this process claimed the order
-                                if ($order_status !== 'processing' && $paytmresponse_type == $through) {
-                                        $order->payment_complete($resParams['TXNID']);
-                                        $order->reduce_order_stock();
-
-                                        $message = "<br/>".sprintf(__(PaytmConstants::TRANSACTION_ID), $resParams['TXNID'])."<br/>".sprintf(__(PaytmConstants::PAYTM_ORDER_ID), $resParams['ORDERID']);
-                                        $message .= '<br/><span class="msg-by-paytm">By: Paytm '.$through.'</span>';
-                                        $order->add_order_note($this->msg['message'] . $message);
-                                        $woocommerce->cart->empty_cart();
-                                }
-                            }
-                        } else if ($resParams['STATUS'] == 'PENDING') {
-                            $message = __(PaytmConstants::PENDING_ORDER_MESSAGE);
-                            if (!empty($responseDescription)) {
-                                $message .= sprintf(__(PaytmConstants::REASON), $responseDescription);
-                            }
-                            $message .= '<br/><span class="msg-by-paytm">By: Paytm '.$through.'</span>';
-                            $this->setStatusMessage($order, $message, 'pending');
-                        } else {
-                            $message = __(PaytmConstants::ERROR_ORDER_MESSAGE);
-                            if (!empty($responseDescription)) {
-                                $message .= sprintf(__(PaytmConstants::REASON), $responseDescription);
-                            }
-                            $message .= '<br/><span class="msg-by-paytm">By: Paytm '.$through.'</span>';
-                            $this->setStatusMessage($order, $message);
-                        }
-                    }
-                } else {
-                    $this->setStatusMessage($order, __(PaytmConstants::ERROR_INVALID_ORDER));
-                }
-
-            } else {
-                $this->setStatusMessage($order, __(PaytmConstants::ERROR_CHECKSUM_MISMATCH));
+        if ('TXN_SUCCESS' === $resParams['STATUS']) {
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                $this->finish_paytm_response(null, $is_webhook, false);
+                return;
             }
 
-            $redirect_url = $this->redirectUrl($order);
+            // MID must match configured MID when present.
+            if (!empty($resParams['MID']) && $resParams['MID'] !== $merchant_id) {
+                $this->setStatusMessage($order, 'Security Error. MID Mismatched!');
+                $this->finish_paytm_response($order, $is_webhook, false);
+                return;
+            }
 
+            // ORDERID must map to this WC order.
+            if (!empty($resParams['ORDERID']) && (string) PaytmHelper::getOrderId($resParams['ORDERID']) !== (string) $order->get_id()) {
+                $this->setStatusMessage($order, __(PaytmConstants::ERROR_INVALID_ORDER, 'paytm-payments'));
+                $this->finish_paytm_response($order, $is_webhook, false);
+                return;
+            }
+
+            $order_status = $order->get_status();
+            if ($order_status !== 'completed') {
+                $this->msg['message'] = __(PaytmConstants::SUCCESS_ORDER_MESSAGE, 'paytm-payments');
+                $this->msg['class']   = 'success';
+
+                $paytmresponse_type = $order->get_meta('paytmresponse_type');
+                if ($order_status !== 'processing' && $paytmresponse_type == $through) {
+                    $txn_id = !empty($resParams['TXNID']) ? sanitize_text_field($resParams['TXNID']) : '';
+                    $order->payment_complete($txn_id);
+                    $order->reduce_order_stock();
+
+                    $message  = '<br/>' . sprintf(__(PaytmConstants::TRANSACTION_ID, 'paytm-payments'), $txn_id);
+                    $message .= '<br/>' . sprintf(__(PaytmConstants::PAYTM_ORDER_ID, 'paytm-payments'), sanitize_text_field($resParams['ORDERID']));
+                    $message .= '<br/><span class="msg-by-paytm">By: Paytm ' . esc_html($through) . '</span>';
+                    $order->add_order_note($this->msg['message'] . $message);
+
+                    if ($woocommerce && isset($woocommerce->cart) && $woocommerce->cart) {
+                        $woocommerce->cart->empty_cart();
+                    }
+                }
+            }
+        } elseif ('PENDING' === $resParams['STATUS']) {
+            $message = __(PaytmConstants::PENDING_ORDER_MESSAGE, 'paytm-payments');
+            if (!empty($responseDescription)) {
+                $message .= sprintf(__(PaytmConstants::REASON, 'paytm-payments'), $responseDescription);
+            }
+            $message .= '<br/><span class="msg-by-paytm">By: Paytm ' . esc_html($through) . '</span>';
+            $this->setStatusMessage($order, $message, 'pending');
+        } else {
+            $message = __(PaytmConstants::ERROR_ORDER_MESSAGE);
+            if (!empty($responseDescription)) {
+                $message .= sprintf(__(PaytmConstants::REASON, 'paytm-payments'), $responseDescription);
+            }
+            $message .= '<br/><span class="msg-by-paytm">By: Paytm ' . esc_html($through) . '</span>';
+            $this->setStatusMessage($order, $message, 'failed');
+        }
+
+        $this->finish_paytm_response($order, $is_webhook, ('success' === $this->msg['class']));
+    }
+
+    /**
+     * Finish callback/webhook response.
+     *
+     * @param WC_Order|null $order      Order.
+     * @param bool          $is_webhook Webhook flag.
+     * @param bool          $success    Whether payment succeeded.
+     */
+    private function finish_paytm_response($order, $is_webhook, $success = false)
+    {
+        if (!empty($this->msg['message'])) {
             $this->setMessages($this->msg['message'], $this->msg['class']);
+        }
 
-            if (isset($_GET['webhook']) && $_GET['webhook'] =='yes') {
-                echo "Webhook Received";
-            } else {
-                wp_redirect($redirect_url);
-            }
-
+        if ($is_webhook) {
+            echo 'Webhook Received';
             exit;
         }
+
+        if ($success && empty($this->msg['class'])) {
+            $this->msg['class'] = 'success';
+        }
+
+        $redirect_url = $this->redirectUrl($order);
+        wp_safe_redirect($redirect_url);
+        exit;
     }
+
     /**
-     * Show template while response 
-    */
+     * Show template while response
+     */
     private function setStatusMessage($order, $msg = '', $status = 'failed')
     {
-
-        $this->msg['class'] = 'error';
+        $this->msg['class']   = 'error';
         $this->msg['message'] = $msg;
-        if (!empty($order)) {
-            $order->update_status($status);
-            $order->add_order_note($this->msg['message']);
+
+        if (!$order instanceof WC_Order) {
+            return;
         }
+
+        // Never downgrade a paid order from callback/webhook (CVE-2026-81740).
+        if ($order->has_status(array('processing', 'completed'))) {
+            $order->add_order_note('Ignored Paytm status update (order already paid): ' . wp_strip_all_tags($msg));
+            return;
+        }
+
+        $order->update_status($status, wp_strip_all_tags($msg));
     }
 
     /* private function setMessages(){

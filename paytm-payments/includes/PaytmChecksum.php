@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if(!class_exists('PaytmChecksum')) :
 class PaytmChecksum{
 

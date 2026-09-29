@@ -1,8 +1,13 @@
 <?php
-/** 
- * PaytmHelper Class 
+/**
+ * PaytmHelper Class
  */
-require_once __DIR__."/PaytmConstants.php";
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+require_once __DIR__ . '/PaytmConstants.php';
 if(!class_exists('PaytmHelper')) :
     class PaytmHelper 
     {

@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 class PaytmConstants{
     CONST TRANSACTION_STATUS_URL_PRODUCTION= "https://secure.paytmpayments.com/order/status";
     CONST TRANSACTION_STATUS_URL_STAGING= "https://securestage.paytmpayments.com/order/status";
@@ -23,9 +28,9 @@ class PaytmConstants{
     CONST CONNECT_TIMEOUT= 10;
     CONST TIMEOUT= 10;
 
-    CONST LAST_UPDATED= "20260525";
-    CONST PLUGIN_VERSION= "2.8.8";
-    CONST PLUGIN_VERSION_FOLDER= "288";
+    CONST LAST_UPDATED= "20260923";
+    CONST PLUGIN_VERSION= "2.8.9";
+    CONST PLUGIN_VERSION_FOLDER= "289";
 
     CONST CUSTOM_CALLBACK_URL= "";
 

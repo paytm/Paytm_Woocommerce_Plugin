@@ -3,16 +3,16 @@
  * Plugin Name: Paytm WooCommerce Payment Gateway
  * Plugin URI: https://github.com/Paytm/
  * Description: This plugin allow you to accept payments using Paytm. This plugin will add a Paytm Payment option on WooCommerce checkout page, when user choses Paytm as Payment Method, he will redirected to Paytm website to complete his transaction and on completion his payment, paytm will send that user back to your website along with transactions details. This plugin uses server-to-server verification to add additional security layer for validating transactions. Admin can also see payment status for orders by navigating to WooCommerce > Orders from menu in admin.
- * Version: 2.8.8
+ * Version: 2.8.9
  * Author: Paytm
  * Author URI: https://www.paytmpayments.com/payment-gateway
  * Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Plugin, Paytm Payment Gateway
  * Requires at least: 4.0.1
- * Tested up to: 7.0
+ * Tested up to: 7.1
  * Requires PHP: 7.4
  * Text Domain: Paytm Payments
  * WC requires at least: 2.0.0
- * WC tested up to: 10.7.0
+ * WC tested up to: 11.1.2
  */
 
 
@@ -84,19 +84,26 @@ register_deactivation_hook(__FILE__, 'uninstall_paytm_plugin');
 function install_paytm_plugin()
 {
     global $wpdb;
-    $table_name = $wpdb->prefix . 'paytm_order_data';
-    $sql = "CREATE TABLE IF NOT EXISTS $table_name (
-			`id` int(11) NOT NULL AUTO_INCREMENT,
-			`order_id` int(11) NOT NULL,
-			`paytm_order_id` VARCHAR(255) NOT NULL,
-			`transaction_id` VARCHAR(255) NOT NULL,
-			`status` ENUM('0', '1')  DEFAULT '0' NOT NULL,
-			`paytm_response` TEXT,
-			`date_added` DATETIME NOT NULL,
-			`date_modified` DATETIME NOT NULL,
-			PRIMARY KEY (`id`)
-		);";
-    $wpdb->query($sql);
+
+    $table_name      = $wpdb->prefix . 'paytm_order_data';
+    $charset_collate = $wpdb->get_charset_collate();
+
+    $sql = "CREATE TABLE {$table_name} (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		order_id bigint(20) unsigned NOT NULL,
+		paytm_order_id varchar(255) NOT NULL,
+		transaction_id varchar(255) NOT NULL DEFAULT '',
+		status tinyint(1) NOT NULL DEFAULT 0,
+		paytm_response longtext NULL,
+		date_added datetime NOT NULL,
+		date_modified datetime NOT NULL,
+		PRIMARY KEY  (id),
+		KEY order_id (order_id),
+		KEY paytm_order_id (paytm_order_id)
+	) {$charset_collate};";
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    dbDelta($sql);
 }
 
 function uninstall_paytm_plugin()
@@ -160,103 +167,58 @@ if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
         }  
     }
 
-    function _paytm_response_table($post = array(),$data = array())
-    { 
-        //Echoing HTML safely start
-        global $allowedposttags;
-        $allowed_atts = array(
-            'align'      => array(),
-            'class'      => array(),
-            'type'       => array(),
-            'id'         => array(),
-            'dir'        => array(),
-            'lang'       => array(),
-            'style'      => array(),
-            'xml:lang'   => array(),
-            'src'        => array(),
-            'alt'        => array(),
-            'href'       => array(),
-            'rel'        => array(),
-            'rev'        => array(),
-            'target'     => array(),
-            'novalidate' => array(),
-            'type'       => array(),
-            'value'      => array(),
-            'name'       => array(),
-            'tabindex'   => array(),
-            'action'     => array(),
-            'method'     => array(),
-            'for'        => array(),
-            'width'      => array(),
-            'height'     => array(),
-            'data'       => array(),
-            'title'      => array(),
-        );
-        $allowedposttags['form']     = $allowed_atts;
-        $allowedposttags['label']    = $allowed_atts;
-        $allowedposttags['input']    = $allowed_atts;
-        $allowedposttags['textarea'] = $allowed_atts;
-        $allowedposttags['iframe']   = $allowed_atts;
-        $allowedposttags['script']   = $allowed_atts;
-        $allowedposttags['style']    = $allowed_atts;
-        $allowedposttags['strong']   = $allowed_atts;
-        $allowedposttags['small']    = $allowed_atts;
-        $allowedposttags['table']    = $allowed_atts;
-        $allowedposttags['span']     = $allowed_atts;
-        $allowedposttags['abbr']     = $allowed_atts;
-        $allowedposttags['code']     = $allowed_atts;
-        $allowedposttags['pre']      = $allowed_atts;
-        $allowedposttags['div']      = $allowed_atts;
-        $allowedposttags['img']      = $allowed_atts;
-        $allowedposttags['h1']       = $allowed_atts;
-        $allowedposttags['h2']       = $allowed_atts;
-        $allowedposttags['h3']       = $allowed_atts;
-        $allowedposttags['h4']       = $allowed_atts;
-        $allowedposttags['h5']       = $allowed_atts;
-        $allowedposttags['h6']       = $allowed_atts;
-        $allowedposttags['ol']       = $allowed_atts;
-        $allowedposttags['ul']       = $allowed_atts;
-        $allowedposttags['li']       = $allowed_atts;
-        $allowedposttags['em']       = $allowed_atts;
-        $allowedposttags['hr']       = $allowed_atts;
-        $allowedposttags['br']       = $allowed_atts;
-        $allowedposttags['tr']       = $allowed_atts;
-        $allowedposttags['td']       = $allowed_atts;
-        $allowedposttags['p']        = $allowed_atts;
-        $allowedposttags['a']        = $allowed_atts;
-        $allowedposttags['b']        = $allowed_atts;
-        $allowedposttags['i']        = $allowed_atts;
-        //Echoing HTML safely end
+    function _paytm_response_table($post = array(), $data = array())
+    {
+        $results = isset($data['args']['results']) ? $data['args']['results'] : array();
 
-        $table_html = '<div class="" id="paytm_payment_area"><div class="message"></div>';
-        $results = $data['args']['results'];
-        $table_html .= '<div class="btn-area"><img class="paytm-img-loader" src="'.admin_url('images/loading.gif').'"><button type="button" id="button-paytm-fetch-status" class="button-paytm-fetch-status button">'.__(PaytmConstants::FETCH_BUTTON).'</button></div>';
-        $paytm_data = array();
-        if (!empty($results)) {
+        echo '<div id="paytm_payment_area"><div class="message"></div>';
+        echo '<div class="btn-area">';
+        echo '<img class="paytm-img-loader" src="' . esc_url(admin_url('images/loading.gif')) . '" alt="" />';
+        echo '<button type="button" id="button-paytm-fetch-status" class="button-paytm-fetch-status button">';
+        echo esc_html(PaytmConstants::FETCH_BUTTON);
+        echo '</button></div>';
+
+        if (!empty($results['paytm_response'])) {
             $paytm_data = json_decode($results['paytm_response'], true);
-            if (!empty($paytm_data)) {
-                $table_html .= '<table class="paytm_payment_block" id="paytm_payment_table">';
+
+            if (is_array($paytm_data) && !empty($paytm_data)) {
+                echo '<table class="paytm_payment_block" id="paytm_payment_table"><tbody>';
+
                 foreach ($paytm_data as $key => $value) {
-                    if ($key!=='request') {
-                        $table_html .= '<tr><td>'.$key.'</td><td>' .$value.'</td></tr>';
+                    if ('request' === $key) {
+                        continue;
                     }
+                    $display = is_scalar($value) ? (string) $value : wp_json_encode($value);
+
+                    echo '<tr>';
+                    echo '<td>' . esc_html((string) $key) . '</td>';
+                    echo '<td>' . esc_html($display) . '</td>';
+                    echo '</tr>';
                 }
-                $table_html .= '</table>';
-                $table_html .= '<input type="hidden" id="paytm_order_id" name="paytm_order_id" value="'.$results['paytm_order_id'].'"><input type="hidden" id="order_data_id" name="order_data_id" value="'.$results['id'].'"><input type="hidden" id="paytm_woo_nonce" name="paytm_woo_nonce" value="'.wp_create_nonce('paytm_woo_nonce').'">';
+
+                echo '</tbody></table>';
+                echo '<input type="hidden" id="paytm_order_id" name="paytm_order_id" value="' . esc_attr($results['paytm_order_id']) . '" />';
+                echo '<input type="hidden" id="order_data_id" name="order_data_id" value="' . esc_attr($results['id']) . '" />';
+                echo '<input type="hidden" id="paytm_woo_nonce" name="paytm_woo_nonce" value="' . esc_attr(wp_create_nonce('paytm_woo_nonce')) . '" />';
             }
         }
-        $table_html .= '</div>';
-        /* echo $table_html;die; */
 
-        echo wp_kses($table_html, $allowedposttags);
+        echo '</div>';
     }
 
 
     function getPaytmOrderData($order_id)
     {
         global $wpdb;
-        $sql = "SELECT * FROM `".$wpdb->prefix ."paytm_order_data` WHERE `order_id` = '".$order_id."' ORDER BY `id` DESC LIMIT 1";
-        return $wpdb->get_row($sql, "ARRAY_A");
+        $table_name = $wpdb->prefix . 'paytm_order_data';
+
+        return $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM `{$table_name}` WHERE `order_id` = %d ORDER BY `id` DESC LIMIT 1",
+                absint($order_id)
+            ),
+            ARRAY_A
+        );
     }
 
     function get_custom_order($order_id) {
@@ -316,17 +278,31 @@ if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
                     success: function(data) {
                         $('.paytm-img-loader').hide();
                         if (data.success == true) {
-                            var html = '';
+                            var $tbody = jQuery('#paytm_payment_table tbody');
+                            if (!$tbody.length) {
+                                jQuery('#paytm_payment_table').html('<tbody></tbody>');
+                                $tbody = jQuery('#paytm_payment_table tbody');
+                            }
+                            $tbody.empty();
                             $.each(data.response, function (index, value) {
-                                html += "<tr>";
-                                html += "<td>" + index + "</td>";
-                                html += "<td>" + value + "</td>";
-                                html += "</tr>";
+                                var $row = jQuery('<tr/>');
+                                $row.append(jQuery('<td/>').text(String(index)));
+                                $row.append(jQuery('<td/>').text(value == null ? '' : String(value)));
+                                $tbody.append($row);
                             });
-                            jQuery('#paytm_payment_table').html(html);
-                            jQuery('#paytm_payment_area div.message').html('<div class="paytm_response success-box">' + data.message + '</div>');
+                            jQuery('#paytm_payment_area div.message')
+                                .empty()
+                                .append(
+                                    jQuery('<div/>', { 'class': 'paytm_response success-box' })
+                                        .text(data.message || '')
+                                );
                         } else {
-                            jQuery('#paytm_payment_area div.message').html('<div class="paytm_response error-box">' + data.message + '</div>');
+                            jQuery('#paytm_payment_area div.message')
+                                .empty()
+                                .append(
+                                    jQuery('<div/>', { 'class': 'paytm_response error-box' })
+                                        .text((data && data.message) ? data.message : '')
+                                );
                         }
                     }
                 });
@@ -360,36 +336,110 @@ if (PaytmConstants::SAVE_PAYTM_RESPONSE) {
             } while(!$resParams['STATUS'] && $retry < PaytmConstants::MAX_RETRY_COUNT);
 
             if (!empty($resParams['STATUS'])) {
-                $response = saveTxnResponse(sanitize_text_field($_POST['paytm_order_id']), sanitize_text_field($_POST['order_data_id']), $resParams); 
+                $response = saveTxnResponse(
+                    PaytmHelper::getOrderId(sanitize_text_field(wp_unslash($_POST['paytm_order_id']))),
+                    absint($_POST['order_data_id']),
+                    $resParams
+                );
                 if ($response) {
                     $message = __(PaytmConstants::RESPONSE_SUCCESS);
-                    $json = array("success" => true, "response" => $resParams, 'message' => $message);
+                    $safe_response = array();
+                    foreach ($resParams as $key => $value) {
+                        if ('request' === $key) {
+                            continue;
+                        }
+                        $safe_key = sanitize_text_field((string) $key);
+                        $safe_response[ $safe_key ] = is_scalar($value)
+                            ? sanitize_text_field((string) $value)
+                            : sanitize_text_field(wp_json_encode($value));
+                    }
+                    $json = array("success" => true, "response" => $safe_response, 'message' => $message);
                 }
             }
         }
-        echo json_encode($json);die;
+        echo wp_json_encode($json);
+        die;
     }
 
     /**
-     * Save response in db
-    */
-    function saveTxnResponse($order_id, $id = false, $data  = array()){
-        global $wpdb;
-        if(empty($data['STATUS'])) return false;
+     * Sanitize Paytm response fields before storage/display (XSS hardening).
+     *
+     * @param array $data Raw Paytm response.
+     * @return array
+     */
+    function paytm_sanitize_response_data($data)
+    {
+        if (!is_array($data)) {
+            return array();
+        }
 
-        $status             = (!empty($data['STATUS']) && $data['STATUS'] =='TXN_SUCCESS') ? 1 : 0;
-        $paytm_order_id     = (!empty($data['ORDERID'])? $data['ORDERID']:'');
-        $transaction_id     = (!empty($data['TXNID'])? $data['TXNID']:'');
+        $safe = array();
+        foreach ($data as $key => $value) {
+            $safe_key = sanitize_text_field((string) $key);
+            if (is_scalar($value) || null === $value) {
+                $safe[ $safe_key ] = sanitize_text_field((string) $value);
+            } else {
+                $safe[ $safe_key ] = sanitize_text_field(wp_json_encode($value));
+            }
+        }
+
+        return $safe;
+    }
+
+    /**
+     * Save Paytm response in DB (SQLi-safe via $wpdb->insert / $wpdb->update).
+     *
+     * @param int        $order_id WC order ID.
+     * @param int|false  $id       Existing row ID to update, or false to insert.
+     * @param array      $data     Paytm response fields.
+     * @return int|false
+     */
+    function saveTxnResponse($order_id, $id = false, $data = array())
+    {
+        global $wpdb;
+
+        if (empty($data['STATUS']) || ! is_array($data)) {
+            return false;
+        }
+
+        $table_name = $wpdb->prefix . 'paytm_order_data';
+        $data       = paytm_sanitize_response_data($data);
+
+        $status         = (!empty($data['STATUS']) && $data['STATUS'] === 'TXN_SUCCESS') ? 1 : 0;
+        $paytm_order_id = !empty($data['ORDERID']) ? sanitize_text_field($data['ORDERID']) : '';
+        $transaction_id = !empty($data['TXNID']) ? sanitize_text_field($data['TXNID']) : '';
+
+        $row = array(
+            'order_id'       => absint($order_id),
+            'paytm_order_id' => $paytm_order_id,
+            'transaction_id' => $transaction_id,
+            'status'         => $status,
+            'paytm_response' => wp_json_encode($data),
+            'date_modified'  => current_time('mysql'),
+        );
 
         if ($id !== false) {
-            $sql =  "UPDATE `" . $wpdb->prefix . "paytm_order_data` SET `order_id` = '" . $order_id . "', `paytm_order_id` = '" . $paytm_order_id . "', `transaction_id` = '" . $transaction_id . "', `status` = '" . (int)$status . "', `paytm_response` = '" . json_encode($data) . "', `date_modified` = NOW() WHERE `id` = '" . (int)$id . "' AND `paytm_order_id` = '" . $paytm_order_id . "'";
-            $wpdb->query($sql);
-            return $id;
-        } else {
-            $sql =  "INSERT INTO `" . $wpdb->prefix . "paytm_order_data` SET `order_id` = '" . $order_id . "', `paytm_order_id` = '" . $paytm_order_id . "', `transaction_id` = '" . $transaction_id . "', `status` = '" . (int)$status . "', `paytm_response` = '" . json_encode($data) . "', `date_added` = NOW(), `date_modified` = NOW()";
-            $wpdb->query($sql);
-            return $wpdb->insert_id;
+            $wpdb->update(
+                $table_name,
+                $row,
+                array(
+                    'id'             => absint($id),
+                    'paytm_order_id' => $paytm_order_id,
+                ),
+                array('%d', '%s', '%s', '%d', '%s', '%s'),
+                array('%d', '%s')
+            );
+            return absint($id);
         }
+
+        $row['date_added'] = current_time('mysql');
+        $wpdb->insert(
+            $table_name,
+            $row,
+            array('%d', '%s', '%s', '%d', '%s', '%s', '%s')
+        );
+
+        return $wpdb->insert_id ? (int) $wpdb->insert_id : false;
     }
 }
     add_action('plugins_loaded', 'woocommerce_paytm_init', 0);

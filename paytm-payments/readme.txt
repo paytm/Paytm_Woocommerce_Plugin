@@ -4,7 +4,7 @@ Tags: Paytm, Paytm Payments, PayWithPaytm, Paytm WooCommerce, Paytm Payment Gate
 Requires PHP: 7.4
 Requires at least: 4.0.1
 Tested up to: 7.0
-Stable tag: 2.8.8
+Stable tag: 2.8.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -98,6 +98,10 @@ In case of any issues with integration, please [get in touch](https://www.paytmp
 * Your Paytm Payment Gateway plugin is now setup. You can now accept payments through Paytmm.
 
 == Changelog ==
+
+= 2.8.9 =
+
+* Security patch added
 
 = 2.8.8 =
 

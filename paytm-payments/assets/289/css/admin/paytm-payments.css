@@ -1,0 +1,11 @@
+/*#woocommerce_paytm_iswebhook{display: none;}*/
+.webhookTrigger{display:none;}
+.msg-by-paytm{
+	display: block;margin-top: 10px;font-size: 8px;
+}
+#woocommerce_paytm_otherWebsiteName{display: none;}
+label[for=woocommerce_paytm_otherWebsiteName]
+{
+    display: none !important;
+}
+ 
