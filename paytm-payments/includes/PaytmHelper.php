@@ -68,7 +68,8 @@ if(!class_exists('PaytmHelper')) :
             if (!empty($transaction_status_url) && function_exists("curl_init")) {
                 $ch = curl_init(trim($transaction_status_url));
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); 
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); 
 
                 $res = curl_exec($ch);
                 curl_close($ch);
@@ -113,7 +114,7 @@ if(!class_exists('PaytmHelper')) :
                 'headers' => $headers,
                 'body'      => json_encode($requestParamList, JSON_UNESCAPED_SLASHES),
                 'method'    => $method,
-                'sslverify' => false
+                'sslverify' => true
             );
 
             $result =  wp_remote_request( $apiURL, $args );
